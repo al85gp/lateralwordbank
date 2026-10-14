@@ -22,7 +22,12 @@ def main(argv: list[str] | None = None) -> int:
     commands.add_parser("loads", help="list completed loads")
     args = parser.parse_args(argv)
 
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    # Our own handler: dlt and dbt configure the root logger when imported, so basicConfig would be ignored.
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+    log.addHandler(handler)
+    log.setLevel(logging.INFO)
+    log.propagate = False
     paths = Paths.from_env()
     try:
         if args.command == "run":
