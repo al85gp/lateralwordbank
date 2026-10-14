@@ -1,4 +1,4 @@
-"""Command line: python -m wb_pipeline run | rebuild [--load-id ID] | loads"""
+"""Command line: python -m wb_pipeline run | rebuild [--load-id ID] | loads | reconcile"""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ import sys
 
 from wb_pipeline.config import ConfigError, load_config
 from wb_pipeline.pipeline import REPO_ROOT, Paths, PipelineError, list_loads, rebuild, run
+from wb_pipeline.reconcile import format_checks, reconcile
 
 log = logging.getLogger("wb_pipeline")
 
@@ -20,6 +21,7 @@ def main(argv: list[str] | None = None) -> int:
     rebuild_cmd = commands.add_parser("rebuild", help="dbt build and export from a stored load, no API calls")
     rebuild_cmd.add_argument("--load-id", help="load to rebuild from (default: the latest completed load)")
     commands.add_parser("loads", help="list completed loads")
+    commands.add_parser("reconcile", help="check output/*.csv against the warehouse and raw responses")
     args = parser.parse_args(argv)
 
     # Our own handler: dlt and dbt configure the root logger when imported, so basicConfig would be ignored.
@@ -36,12 +38,20 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "rebuild":
             load_id = rebuild(paths, args.load_id)
             log.info("done: rebuilt from load %s, reports in %s", load_id, paths.output_dir)
+        elif args.command == "reconcile":
+            checks = reconcile(paths.warehouse, paths.output_dir)
+            print(format_checks(checks))
+            failed = [c for c in checks if not c.ok]
+            if failed:
+                log.error("%d of %d checks failed", len(failed), len(checks))
+                return 1
+            log.info("all %d checks passed: the CSVs match the warehouse and the raw API responses", len(checks))
         else:
             loads = list_loads(paths)
             print("load_id\tinserted_at\tpages")
             for load_id, inserted_at, pages in loads:
                 print(f"{load_id}\t{inserted_at}\t{pages}")
-    except (ConfigError, PipelineError) as e:
+    except (ConfigError, PipelineError, FileNotFoundError) as e:
         log.error("%s", e)
         return 1
     return 0

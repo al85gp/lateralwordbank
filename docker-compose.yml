@@ -14,6 +14,7 @@ services:
     # Run as the host user so files written to data/ and output/ belong to them.
     user: "${UID:-1000}:${GID:-1000}"
     volumes:
+      - ./config:/app/config:ro  # edits to pipeline.yml apply without rebuilding the image
       - ./data:/app/data
       - ./output:/app/output
 
