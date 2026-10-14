@@ -1,5 +1,6 @@
 """End-to-end runs on recorded responses: dlt extract and load, dbt build, CSV export."""
 
+import csv
 import hashlib
 import json
 import logging
@@ -10,6 +11,7 @@ import pytest
 from conftest import Reply, canonical_urls, indicator_url, recorded_json
 from wb_pipeline.export import REPORTS
 from wb_pipeline.pipeline import PipelineError, list_loads, rebuild, run
+from wb_pipeline.reconcile import format_checks, reconcile
 
 POP_P1 = indicator_url("SP.POP.TOTL", 1)
 LE_P2 = indicator_url("SP.DYN.LE00.IN", 2)
@@ -164,3 +166,31 @@ def test_rebuild_rejects_an_unknown_load(api, config, paths):
     run(config, paths)
     with pytest.raises(PipelineError, match="not a completed load"):
         rebuild(paths, "1234.5")
+
+
+def test_reconcile_csvs_match_their_source_tables(api, config, paths):
+    run(config, paths)
+
+    checks = reconcile(paths.warehouse, paths.output_dir)
+
+    assert len(checks) == 13
+    assert all(c.ok for c in checks), format_checks(checks)
+
+
+def test_reconcile_catches_a_csv_that_no_longer_matches(api, config, paths):
+    run(config, paths)
+    report = paths.output_dir / "rpt_yoy_change.csv"
+    with report.open(newline="") as f:
+        rows = list(csv.DictReader(f))
+    rows[0]["value"] = str(float(rows[0]["value"]) * 1.01)  # one value edited by hand
+    with report.open("w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=rows[0].keys())
+        writer.writeheader()
+        writer.writerows(rows)
+
+    failed = {c.name: c.actual for c in reconcile(paths.warehouse, paths.output_dir) if not c.ok}
+
+    assert failed == {
+        "rpt_yoy_change.csv equals reporting.rpt_yoy_change (differing rows)": "2",  # the edited row, both ways
+        "rpt_yoy_change.csv values = fct_indicator_year (differing rows)": "1",
+    }

@@ -61,6 +61,12 @@ docker compose run --rm pipeline loads
 docker compose run --rm pipeline rebuild --load-id <load_id>
 ```
 
+Check that the CSVs in `output/` match the warehouse and the raw API responses. This prints 13 checks and exits non-zero if any fails:
+
+```bash
+docker compose run --rm pipeline reconcile
+```
+
 Both commands were checked from a fresh clone. Building the image the first time takes about a minute. After that, a full run takes about 10 seconds: about 4 seconds for the nine API requests, then `dbt build` and the export. The test suite takes about 30 seconds.
 
 Without Docker, with Python 3.12:
@@ -82,7 +88,7 @@ python3.12 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt -c con
 | R-ING-01, R-ING-02 | Retrieve country metadata and indicator observations | One country call, one call per indicator, all nine countries per request | `source.py` | `test_end_to_end`, `test_paging_*` |
 | R-ING-03 | Handle paging | `per_page: 50`, so every indicator has two pages; a page loop reads `pages` from page 1 and fetches the rest; rows received are checked against `total` | `source.py` | `test_paging_*` |
 | R-ING-04 | Handle API failures | dlt retries 429, 5xx and timeouts with backoff (`.dlt/config.toml`); other 4xx fail fast; every HTTP 200 body is validated against its request, and a rejected body is refetched with a fresh cache-buster; a failed extract loads nothing | `source.py`, `.dlt/config.toml` | `test_retries_*`, `test_error_payload_*`, `test_response_validation_*`, `test_wrong_body_retry_*`, `test_failed_run_not_exported` |
-| R-ING-05, D-07 | Every output value traceable to its API response | `load_id`, `request_url`, `body_sha256` and `record_index` on every row; the body exactly as received, the URL actually sent and the attempt number in raw; lineage query below | `raw.api_responses`, every model | `assert_lineage_resolves_to_raw`, `assert_raw_pages_intact`, `test_lineage_*` |
+| R-ING-05, D-07 | Every output value traceable to its API response | `load_id`, `request_url`, `body_sha256` and `record_index` on every row; the body exactly as received, the URL actually sent and the attempt number in raw; lineage query below | `raw.api_responses`, every model | `assert_lineage_resolves_to_raw`, `assert_raw_pages_intact`, `test_lineage_*`, `reconcile` |
 | R-ING-06 | One documented command from a clean checkout | `docker compose run --rm --build pipeline` | `docker-compose.yml` | Fresh-clone run |
 | R-ING-07, D-08 | A rerun creates no duplicate analytical records | Raw is append-only; marts rebuild from the latest completed load (`_dlt_loads.status = 0`); `unique` on every grain | dbt marts | `test_idempotent_rerun` |
 | R-ING-08 | No cloud resources or accounts | Public API, open-source dlt (no paid tier), a local DuckDB file, local Docker | Whole repo | Nothing to sign up for |
@@ -91,7 +97,7 @@ python3.12 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt -c con
 | R-MOD-03 | Standardized for analysts | ISO3 key, integer year, flattened objects, snake_case, typed values | Staging models | `accepted_values` and range tests |
 | R-MOD-04, D-09 | Add a country or indicator by configuration | One list entry in `config/pipeline.yml` | `config.py` | `test_config_validation`, spine-completeness test |
 | D-01, D-02 | Missing data is an outcome, not zero | Spine-based fact with `value_status` | `fct_indicator_year` | `accepted_values`, `assert_spine_complete` |
-| R-ANL-01 – R-ANL-04 | The four analytics questions | One dbt view each, exported to CSV | `dbt/models/reporting/`, `output/` | `test_end_to_end`, `assert_yoy_change_matches_status`, `assert_income_groups_reconcile` |
+| R-ANL-01 – R-ANL-04 | The four analytics questions | One dbt view each, exported to CSV | `dbt/models/reporting/`, `output/` | `test_end_to_end`, `assert_yoy_change_matches_status`, `assert_income_groups_reconcile`, `test_reconcile_*` |
 | R-ANL-05 | *Optional* extra view or dashboard | Streamlit dashboard over the four reports: coverage, year-over-year, latest year, income groups | `dashboard/app.py`, `docker-compose.yml` | `test_dashboard_*` |
 | R-DQ-01 | Correctness and safe reprocessing | dbt tests on every run; pytest suite, run by CI on every push | `dbt/tests/`, `tests/`, `.github/workflows/ci.yml` | Data quality and tests section |
 | R-DQ-02, D-06 | Related indicators consistent | GDP per capita within 1% of GDP ÷ population | Singular dbt test (warn) | `test_consistency_warning_does_not_block_export`; warning rows in the run output |
@@ -140,7 +146,7 @@ lateralwordbank/
 ├── .github/workflows/ci.yml  # CI: docker compose run --rm test on every push
 ├── requirements.md           # the brief's requirements with IDs
 ├── Dockerfile                # python:3.12-slim; stages runtime and test; runs as the host user
-├── docker-compose.yml        # project lateralwordbank: pipeline, test (profile test, network_mode: none); mounts data/ and output/
+├── docker-compose.yml        # project lateralwordbank: pipeline, test, dashboard; mounts config/ (read-only), data/ and output/
 ├── requirements.txt          # dlt[duckdb], duckdb, dbt-core, dbt-duckdb, pyyaml (pinned)
 ├── requirements-dev.txt      # pytest, requests-mock (pinned)
 ├── requirements-dashboard.txt # streamlit (pinned)
@@ -151,11 +157,12 @@ lateralwordbank/
 ├── .dlt/
 │   └── config.toml           # HTTP timeout, retry attempts, backoff; telemetry off
 ├── wb_pipeline/
-│   ├── __main__.py           # run | rebuild [--load-id] | loads
+│   ├── __main__.py           # run | rebuild [--load-id] | loads | reconcile
 │   ├── config.py             # load + validate pipeline.yml
 │   ├── source.py             # dlt source: page loop, resources, response validation, cache-buster retries
 │   ├── pipeline.py           # extract and load, dbt build, export, in order; rebuild; list loads
-│   └── export.py             # reporting views to output/.staging, moved into output/ on green
+│   ├── export.py             # reporting views to output/.staging, moved into output/ on green
+│   └── reconcile.py          # output/*.csv checked against the views, the fact table and raw
 ├── dbt/
 │   ├── dbt_project.yml       # schemas staging, marts, reporting; failing test rows kept in dq
 │   ├── profiles.yml          # duckdb at $WAREHOUSE_PATH
@@ -200,7 +207,7 @@ indicators:
 - **Add an indicator:** append its code, unit and income-group aggregation (`sum` or `population_weighted_mean`).
 - **Change years:** edit `years`.
 
-Then rerun the pipeline. The expected spine, the completeness test and every report widen automatically.
+Then rerun the pipeline. The expected spine, the completeness test and every report widen automatically. In Docker, `config/` is mounted into the container read-only, so an edit applies on the next `docker compose run --rm pipeline` without rebuilding the image.
 
 `config.py` rejects invalid ISO3 codes, lower-case indicator codes, duplicates, `start > end`, unknown aggregations, `validation_attempts` below 1, `per_page` above 32767 (the API's limit), unknown keys (a typo fails loudly), and `population_weighted_mean` when `SP.POP.TOTL` is not in scope.
 
@@ -377,6 +384,18 @@ The column lists above were checked against the real payload. The model drops th
 - 2018 has no prior year in scope, so its YoY status is `first_year_in_scope`. Set `years.start: 2017` to change that.
 - India is the only lower-middle-income country in scope, so that group is a single country.
 
+**Checking the CSVs against their source tables.** The dbt tests check the models inside the warehouse. `python -m wb_pipeline reconcile` (in Docker: `docker compose run --rm pipeline reconcile`) checks the files people actually read, from the outside:
+
+| Check | What it compares |
+| --- | --- |
+| Each CSV equals its reporting view | Every row and value, both directions (`EXCEPT ALL`), with the CSV read using the view's column types |
+| Row counts follow from scope | Facts and `rpt_yoy_change` = countries × indicators × years from `raw.run_scope`; `rpt_latest_comparison` = countries × indicators; `rpt_income_group_by_year` = groups × indicators × years; `rpt_missing_or_incomplete` = facts not reported |
+| CSV values = fact table | Every `rpt_yoy_change` value, `request_url` and `record_index` against `fct_indicator_year`; every `rpt_latest_comparison` value against the fact at that country's latest reported year |
+| Fact table = raw API response | Every reported value against the record at `record_index` in its stored body, whose SHA-256 must match |
+| Income groups = country totals | For `sum` indicators, the groups add up to the reporting countries, per indicator and year |
+
+On the committed output all 13 checks pass. `test_reconcile_*` runs the command after a pipeline run, and also edits one CSV value by hand to show that exactly the two checks that should fail do fail.
+
 What the committed CSVs show (live run, source updated 2026-10-08):
 
 - **`rpt_missing_or_incomplete`:** a header only. All 252 requested values were reported.
@@ -417,7 +436,7 @@ The consistency checks warn rather than fail: the source revises indicators on d
 
 `requests-mock` intercepts every HTTP call dlt makes and serves JSON from `tests/fixtures/`, recorded once from the live API. The fixtures are the exact canonical URLs a real run sends: the country call plus pages 1 and 2 at `per_page=50` for all four indicators, copied from `api_calls/samples/pagination/`. Joined, the two pages of each indicator match the single-page golden recordings in `api_calls/samples/observations/` value for value. Integration tests run the dlt pipeline into a temporary DuckDB file and call `dbt build` through dbt's Python runner, with dlt's retry delays set to zero. The `test` service runs with `network_mode: none`, so any accidental live call fails the suite.
 
-64 tests in five files. Names below are prefixes; each covers several cases.
+66 tests in five files. Names below are prefixes; each covers several cases.
 
 | Test | File | Proves |
 | --- | --- | --- |
@@ -435,6 +454,7 @@ The consistency checks warn rather than fail: the source revises indicators on d
 | `test_bad_data_blocks_export` | `test_pipeline.py` | A duplicate page seeded into raw fails `assert_no_duplicate_api_records`; `output/` stays byte-identical |
 | `test_consistency_warning_does_not_block_export` | `test_pipeline.py` | GDP per capita 5% off for one country-year logs the `warn` test with its row, and the CSVs are still written |
 | `test_rebuild_rejects_an_unknown_load` | `test_pipeline.py` | `rebuild` with a load id that is not a completed load fails with a clear message |
+| `test_reconcile_*` | `test_pipeline.py` | After a run, all 13 reconcile checks pass. With one CSV value edited by hand, exactly two fail: the CSV no longer equals its view, and no longer equals the fact |
 | `test_dashboard_*` | `test_dashboard.py` | Streamlit's `AppTest` renders the dashboard without a browser. All four tabs and every indicator render from the CSVs of a real pipeline run on the recorded responses. A missing value is counted as missing and listed with its status. With no reports, the page says how to create them |
 
 The suite can fail: with the `indicator.id` check in `source.py` disabled on purpose, three tests fail, including both `test_wrong_body_retry` tests that expect a wrong body to be rejected.
@@ -563,31 +583,89 @@ docker compose run --rm test
 
 ## AI usage
 
-**I chose the tech stack myself, not an AI tool:** dlt (open source) for ingestion, DuckDB, dbt-core with dbt-duckdb, and Docker Compose. AI (Claude) designed and drafted within that stack, as the table below shows.
+**I chose the tech stack myself, not an AI tool:** dlt (open source) for ingestion, DuckDB, dbt-core with dbt-duckdb, and Docker Compose. AI (Claude, in Claude Code) designed and drafted within that stack.
+
+- **Who did what:** I made the decisions and set the rules. Claude wrote the code, tests and documentation within them and ran the checks I asked for.
+- **"What I changed"** records my instructions and decisions during the build.
+- **"How I verified"** lists the evidence for each step.
+- **"To check yourself"** marks a check to repeat by hand. The checklist below the table gives the exact commands.
 
 | Step | What AI drafted | What I changed | How I verified |
 | --- | --- | --- | --- |
-| Planning | Architecture, data model, requirement mapping and README outline (Claude), within the stack I chose | Cut the orchestrator and the report UI; chose CSV-only output | Checked every requirement in the brief against the coverage table |
-| Scaffold | Dockerfile (runtime and test stages, runs as the host user), `docker-compose.yml`, pinned requirements and `constraints.txt`, `config/pipeline.yml`, `.dlt/config.toml`, the dbt project skeleton (Claude) | | |
-| Extract and load | `config.py`, `source.py` (page loop, response validation, cache-buster retries), `pipeline.py`, `__main__.py`; recorded the canonical country URL and the 50-per-page pages as fixtures (Claude) | | |
-| Staging and marts | The staging and marts models, a description on every model and column, schema tests and singular tests (Claude) | | |
-| Reporting | The four `rpt_*` views, the year-over-year and income-group reconciliation tests, the CSV export (Claude) | | |
-| pytest | `conftest.py` with the fake API, 57 tests across four files (Claude) | | |
-| README | The sections filled in from the live run and test results: quick start timing, observed API behavior, dropped fields, report summaries, test tables, decisions (Claude) | | |
-| Dashboard | `dashboard/app.py`, the `dashboard` Docker stage and Compose service, `test_dashboard.py` (Claude) | | |
-| CI | `.github/workflows/ci.yml` (Claude) | | |
+| Planning | Architecture, data model, requirement mapping and README outline (Claude), within the stack I chose | Selected the tech stack after analyzing the API with live calls (`api_calls/`). Created `requirements.md`, which translates the brief into numbered requirements, then helped build the plan in `README.md`. Reviewed the README against `requirements.md` and set the rule that `requirements.md` wins on any conflict | Checked every requirement in the brief against the coverage table, which has a requirement ID on every row and a row for every requirement. Every relative link in `README.md` and `requirements.md` resolves; the broken ones were removed or fixed |
+| Scaffold | Dockerfile (runtime and test stages, runs as the host user), `docker-compose.yml`, pinned requirements and `constraints.txt`, `config/pipeline.yml`, `.dlt/config.toml`, the dbt project skeleton (Claude) | Required the whole build to run in Docker. When the `--rm` containers disappeared from Docker Desktop, asked for named containers that stay visible: `worldbank-pipeline`, `worldbank-tests` and `worldbank-dashboard` in the `lateralwordbank` project | The documented commands were run from a fresh clone: the first image build takes about a minute and a run about 10 seconds. `worldbank-pipeline` and `worldbank-tests` ended "Exited (0)". **To check yourself:** items 1 and 2 |
+| Extract and load | `config.py`, `source.py` (page loop, response validation, cache-buster retries), `pipeline.py`, `__main__.py`; recorded the canonical country URL and the 50-per-page pages as fixtures (Claude) | Decided how the API's failure modes are handled: every HTTP 200 body is validated against its request, and a rejected one is retried with a fresh cache-buster (`&cb=<load_id>-<attempt>`). Raised the HTTP timeout from 30 to 90 seconds after a 45-second uncached response. Set `per_page: 50` so paging runs on every real run, and had 50-per-page responses recorded for the other three indicators | Each new fixture page passed the validation rules, and its two pages joined match the single-page recording value for value. In the live runs, all nine requests were accepted on the first attempt, with `sha256(body) = body_sha256` on every raw page. Tests: `test_paging_*`, `test_retries_*`, `test_error_payload_*`, `test_response_validation_*`, `test_wrong_body_retry_*`. **To check yourself:** items 4 and 6 |
+| Staging and marts | The staging and marts models, a description on every model and column, schema tests and singular tests (Claude) | Asked for dbt tests to be part of the build, so they run on every `dbt build`, not as a separate step. Set the model's core rule: missing is a status, never 0 (D-01, D-02) | `dbt build` runs 11 models and 77 tests with PASS=88. A deliberately broken view stopped the export and left `output/` untouched. The fact table has 252 rows, all `reported`, and GDP per capita matches GDP ÷ population to about 1e-15. **To check yourself:** items 7 and 8 |
+| Reporting | The four `rpt_*` views, the year-over-year and income-group reconciliation tests, the CSV export, `reconcile.py` (Claude) | Ruled that `requirements.md` decides the report logic: each country's own latest reported year (D-04), and a zero prior that keeps `abs_change` with no `pct_change` (D-03). Asked for proof that the CSVs match their source tables, which added the `reconcile` command | Three layers. (1) `reconcile` checks each CSV against its view row for row, the row counts against the load's scope, every CSV value against `fct_indicator_year`, every fact against its raw API record, and the income-group sums against the country totals: 13 of 13 OK on the committed output. (2) The dbt tests `assert_lineage_resolves_to_raw`, `assert_yoy_change_matches_status` and `assert_income_groups_reconcile` run on every build. (3) `test_reconcile_*` shows the command catches a CSV edited by hand. **To check yourself:** items 3 and 5 |
+| pytest | `conftest.py` with the fake API, and the test suite: 66 tests in five files (Claude) | Required that tests never call the live API (R-DQ-03) and that they run in Docker exactly as documented | 66 tests pass locally and in `docker compose run --rm test` with no network. A mutation check, with the `indicator.id` check disabled, made three tests fail. **To check yourself:** item 11 |
+| README | The sections filled in from the live run and test results: quick start timing, observed API behavior, dropped fields, report summaries, test tables, decisions (Claude) | Reviewed the README against `requirements.md` and chose the fixes: requirement rules first, wrong-body handling, the 90-second timeout, `per_page: 50`, broken links removed. Asked for this section to state that I chose the stack, and to record my guidance here | Every TODO was replaced with what the build did. The numbers (timings, row counts, test counts) come from the runs above. **To check yourself:** read Assumptions and Trade-offs and confirm they match your intent |
+| Dashboard | `dashboard/app.py`, the `dashboard` Docker stage and Compose service, `test_dashboard.py` (Claude) | Asked what a Streamlit page would add before deciding: about 285 MB of packages, for a 779 MB image. Then had it built in its own Docker stage and PR, so the pipeline image stays unchanged | The `worldbank-dashboard` container is healthy, and all four tabs were checked in a browser. `test_dashboard_*` (7 tests) render the page from a real pipeline run on the recorded responses. **To check yourself:** item 9 |
+| CI | `.github/workflows/ci.yml` (Claude) | Asked for `docker compose run --rm test` on every push | The first run, on `ci/docker-tests`, passed in about 2.5 minutes. **To check yourself:** item 10 |
 
-Checks Claude ran while drafting:
+### Verify it yourself
 
-- Live runs against the API, with every page accepted on the first attempt.
-- `dbt build`: PASS=88, plus one deliberate failure, which showed that a failing build leaves `output/` untouched.
-- 57 pytest tests, passing locally and in the Docker `test` service with no network. With the dashboard tests, the suite is now 64.
-- The dashboard container shown healthy, and all four tabs checked in a browser.
-- A mutation check: the indicator check disabled on purpose, with three tests failing.
-- The documented commands run from a fresh clone.
-- Raw data checked directly: the empty `unit`, USA GDP's int tokens and the 1e-15 consistency margin were confirmed by querying raw.
+Run these from the repository folder. Items 6 to 8 change `config/pipeline.yml` or `output/`. Revert with `git checkout config output` afterwards.
 
-> **TODO (author):** fill "What I changed" and "How I verified" for each step. Name the file, what you rewrote, and which test or live check confirmed it.
+1. **Fresh clone, one command.** Clone the repo, then run:
+
+   ```bash
+   docker compose run --rm --build pipeline
+   ```
+
+   Expect `PASS=88` from dbt and the log line `done: load <id>`. If the source hasn't changed since 2026-10-08, `git status` shows no change in `output/`.
+2. **In Docker Desktop.** Run:
+
+   ```bash
+   docker compose up --build
+   ```
+
+   Then go to Containers → `lateralwordbank` → `worldbank-pipeline`. It should read "Exited (0)", and its Logs tab shows the nine pages and `done`.
+3. **The source tables match the output.** Run:
+
+   ```bash
+   docker compose run --rm pipeline reconcile
+   ```
+
+   Expect 13 checks, all `OK`, and exit code 0. Then change one number in `output/rpt_yoy_change.csv` and run it again. Expect `MISMATCH` on the two `rpt_yoy_change` checks and exit code 1. Restore the file with `git checkout output`.
+4. **Raw pages are intact.** List the latest load's pages, with their attempt number and whether each stored body still matches its hash:
+
+   ```bash
+   docker compose run --rm --entrypoint python pipeline -c "import duckdb; print(duckdb.connect('/app/data/warehouse.duckdb').sql('select request_url, attempt, sha256(body) = body_sha256 as intact from raw.api_responses where _dlt_load_id = (select max(_dlt_load_id) from raw.api_responses) order by all'))"
+   ```
+
+   Expect nine rows with `intact` true. `attempt` is 1 unless the API sent a wrong body.
+5. **One value against the live API.** In `output/rpt_latest_comparison.csv`, pick a row:
+   1. Open its `request_url` in a browser.
+   2. In the second array, find the element at `record_index`, counting from 0.
+   3. That element's `countryiso3code`, `date` and `value` should match the row. A value the World Bank has revised since 2026-10-08 will differ, and that's expected.
+6. **A failed run leaves the reports alone.** In `config/pipeline.yml`, change `SP.DYN.LE00.IN` to `SP.DYN.LE00.XX` and run the pipeline. It must exit non-zero with `id 120` and `nothing was loaded`, and `git status` must show `output/` unchanged. Revert the config.
+7. **Add a country by configuration.** Append `FRA` to `countries` and run the pipeline, then `reconcile`. Expect 280 facts (10 × 4 × 7) and all checks `OK`. Revert the config and run again.
+8. **Replay an earlier load.** List the loads, then rebuild from an older one without calling the API:
+
+   ```bash
+   docker compose run --rm pipeline loads
+   ```
+
+   ```bash
+   docker compose run --rm pipeline rebuild --load-id <older id>
+   ```
+
+   Then run `reconcile`. All checks should pass for that load.
+9. **Dashboard.** Run:
+
+   ```bash
+   docker compose up -d --build dashboard
+   ```
+
+   Open http://localhost:8501 and go through the four tabs. Keep the page open during item 7 and refresh it after the run: France appears. After the revert run, refresh again and it's gone.
+10. **CI can fail.** On a scratch branch, change `252` to `251` in `test_end_to_end` and push. The run on GitHub → Actions must go red. Then delete the branch.
+11. **The whole suite.** Run:
+
+    ```bash
+    docker compose run --rm test
+    ```
+
+    Expect `66 passed`.
 
 
 ---
