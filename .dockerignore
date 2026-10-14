@@ -1,0 +1,10 @@
+.git
+.venv
+.pytest_cache
+**/__pycache__
+api_calls
+data
+output
+dbt/target
+dbt/logs
+.DS_Store

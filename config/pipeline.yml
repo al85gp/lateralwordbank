@@ -1,0 +1,12 @@
+# Pipeline scope. This is the only file to edit to add a country, an indicator or years.
+api:
+  base_url: https://api.worldbank.org/v2
+  per_page: 50            # 63 rows per indicator -> 2 pages, so paging runs on every real run
+  validation_attempts: 4  # tries per page when an HTTP 200 body fails validation
+years: {start: 2018, end: 2024}
+countries: [BRA, CAN, DEU, GBR, IND, JPN, MEX, USA, ZAF]
+indicators:
+  - {code: SP.POP.TOTL,    unit: people,      aggregation: sum}
+  - {code: NY.GDP.MKTP.CD, unit: current USD, aggregation: sum}
+  - {code: NY.GDP.PCAP.CD, unit: current USD, aggregation: population_weighted_mean}
+  - {code: SP.DYN.LE00.IN, unit: years,       aggregation: population_weighted_mean}

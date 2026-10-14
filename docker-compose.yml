@@ -1,0 +1,22 @@
+services:
+  # docker compose run --rm --build pipeline              -> extract, dbt build, export CSVs
+  # docker compose run --rm pipeline rebuild --load-id X  -> rebuild from raw, no API calls
+  pipeline:
+    build:
+      context: .
+      target: runtime
+    image: wb-pipeline:local
+    # Run as the host user so files written to data/ and output/ belong to them.
+    user: "${UID:-1000}:${GID:-1000}"
+    volumes:
+      - ./data:/app/data
+      - ./output:/app/output
+
+  # docker compose run --rm test  -> every test, with no network at all
+  test:
+    build:
+      context: .
+      target: test
+    image: wb-pipeline-test:local
+    user: "${UID:-1000}:${GID:-1000}"
+    network_mode: none

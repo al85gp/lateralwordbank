@@ -1,0 +1,8 @@
+# HTTP behavior of dlt's requests client, used for every World Bank API call.
+[runtime]
+request_timeout = 90          # an uncached response took 45 s (api_calls/01)
+request_max_attempts = 5
+request_backoff_factor = 2
+request_max_retry_delay = 60
+dlthub_telemetry = false      # no calls to anything but the World Bank API
+log_level = "WARNING"

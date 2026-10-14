@@ -2,3 +2,18 @@
 node_modules/
 .env
 *.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# Pipeline state: the warehouse and dlt's working folder (output/ is committed as sample output)
+data/*
+!data/.gitkeep
+output/.staging/
+
+# dbt
+dbt/target/
+dbt/logs/
