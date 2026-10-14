@@ -102,7 +102,7 @@ python3.12 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt -c con
 | R-DQ-01 | Correctness and safe reprocessing | dbt tests on every run; pytest suite, run by CI on every push | `dbt/tests/`, `tests/`, `.github/workflows/ci.yml` | Data quality and tests section |
 | R-DQ-02, D-06 | Related indicators consistent | GDP per capita within 1% of GDP ÷ population | Singular dbt test (warn) | `test_consistency_warning_does_not_block_export`; warning rows in the run output |
 | R-DQ-03, D-10 | Tests never call the live API | `requests-mock` with recorded fixtures; the `test` service has no network | `tests/`, `docker-compose.yml` | Any live call fails the suite |
-| R-PRD-01 – R-PRD-05 | Production design note | Scheduling, late data, monitoring, backfills, cloud mapping | Production design note section | — |
+| R-PRD-01 – R-PRD-05 | Production design note | Dagster (open source) for scheduling, monitoring, alerting and data-quality enforcement; late data, backfills and replay, cloud mapping | Production design note section | — |
 | R-DEL-01 | Runs locally by following the README | Docker Compose, nothing else on the host | Quick start | Fresh-clone run |
 | R-DEL-02 | Setup, assumptions, trade-offs, decisions, AI usage | One section each in this README | `README.md` | — |
 | R-DEL-03 | Sample output of the reporting queries | Committed CSVs | `output/*.csv` | — |
@@ -502,6 +502,7 @@ docker compose run --rm test
 | A cache-busted retry counter per canonical URL for the whole run | A counter per page fetch | A restart from page 1 also gets fresh tokens, and the attempt budget still bounds the total requests |
 | Run the container as the host user | Run as root | Files in `data/` and `output/` belong to the person who ran it, on Linux too |
 | Pinned top-level versions plus `constraints.txt` | Top-level pins only | The same transitive versions in every build |
+| Dagster for production orchestration, monitoring, alerting and data quality | Airflow, Prefect, cron with scripts | Assets match the pipeline's lineage from API page to CSV. `dagster-dlt` and `dagster-dbt` wrap the existing code, and dbt tests become asset checks with no extra code. Sensors, freshness checks, partitions, backfills and the UI are all open source |
 
 ---
 
@@ -539,45 +540,100 @@ docker compose run --rm test
 | Consistency checks warn | Reports ship despite revision timing | A real error needs someone to read the warning |
 | Failing test rows stored in `dq` | A failure can be inspected after the run; warnings print their rows | 77 small tables in the `dq` schema, rebuilt every run |
 | dbt runs in-process through `dbtRunner` | One process and one exit code for the whole run; tests call it directly | dlt and dbt share a Python environment, so their dependency versions must agree (pinned in `constraints.txt`) |
+| Dagster in production only | Locally, one command and nothing else to run; in production, a UI, alerts, freshness checks and backfills | Two ways to start the same steps; Dagster's webserver, daemon and PostgreSQL are infrastructure to operate; the Dagster definitions still have to be written |
 
 ---
 
 ## Production design note
 
-**Scheduling and incremental refreshes**
+In production the same code runs under **[Dagster](https://dagster.io)**. It is open source (Apache 2.0) and self-hosted, so it needs no account. Dagster owns scheduling, monitoring, alerting and the enforcement of data quality.
 
-- Run on a schedule, daily or weekly. Each run first compares every indicator's `lastupdated` and `body_sha256` with the last completed load.
-- At about nine requests a full re-pull is cheaper than incremental logic. At hundreds of indicators, re-pull only indicators whose `lastupdated` moved, plus a full pull monthly.
+**Why Dagster:**
+- Its model is assets, which matches how this pipeline already thinks: API pages, then raw tables, then models, then CSVs.
+- It has first-party integrations for both tools here: `dagster-dlt` for the source and `dagster-dbt` for the models.
+- `dagster-dbt` turns every dbt test into a Dagster asset check with no extra code.
+- Sensors, freshness checks, partitions, backfills and the web UI are all in the open-source version. Dagster+, the paid hosted product, is not needed for anything below.
 
-**Late, corrected or changed source data**
+Locally, nothing changes: the pipeline stays one `docker compose run`. Dagster only wraps the same steps.
 
-- The API serves current values only and overwrites history at the source. Raw keeps every response body per load, so every revision survives locally.
-- Facts reflect the latest completed load. Next step: a dbt snapshot on `fct_indicator_year` for value history, and a `rpt_revisions` view listing values that changed between loads and by how much.
-- A value that goes from reported to null is surfaced as `null_in_source`, never silently kept.
+**How the pipeline maps onto Dagster**
 
-**Monitoring, alerting, data-quality failures**
+| Today | In Dagster |
+| --- | --- |
+| `world_bank_source` (dlt) | Assets `raw/run_scope` and `raw/api_responses`, via `dagster-dlt` (`@dlt_assets`) |
+| The dbt project | One asset per model, via `dagster-dbt` (`@dbt_assets`); every dbt test becomes an asset check on its model |
+| `export.py` | An asset, `reports_csv`, downstream of the four reporting views |
+| `reconcile.py` | An asset check on `reports_csv` |
+| `python -m wb_pipeline run` | A job over all assets, started by a schedule or a sensor |
+| `rebuild --load-id <id>` | The same job with `load_id` in its run config: rebuilds from raw, no API call |
+| `config/pipeline.yml` | Unchanged; read when Dagster loads the definitions |
 
-- Alert on a failed run, any `error` test, a drop in `reported` rows versus the previous load, revisions above a threshold, and no completed load inside the schedule window.
-- Track `warn` test counts per run as a trend.
-- Track pages with `attempt > 1` and the logged rejections per run. A rise means the API's caching problem got worse; a run that fails on `validation_attempts` alerts like any other failure.
-- Locally, CSVs are swapped in only after a green `dbt build`, though `warehouse.duckdb` itself is already rebuilt. In Snowflake, build into a staging schema and run `ALTER SCHEMA ... SWAP WITH` on green.
+**Scheduling and incremental refreshes (R-PRD-01)**
 
-**Backfills and replay**
+- **Triggering.** A Dagster schedule runs the job daily. A sensor checks the source's `lastupdated` first, with one cache-busted request to `/v2/source/2?format=json` (about 0.2 seconds), and requests a run only when it has moved. Most days therefore cost one request, not nine. The cache-buster matters because the cached copy of that URL can lag a new release by up to about 24 hours (api_calls/03).
+- **Full re-pull for now.** At about nine requests, a full re-pull is cheaper than incremental logic.
+- **Incremental later.** At hundreds of indicators, partition the dlt asset by indicator, with the partition list read from config. The sensor then materializes only the partitions whose `lastupdated` moved, and a monthly scheduled run still pulls everything.
+- **One writer at a time.** Only one run writes the warehouse. Dagster's queued run coordinator enforces this with a concurrency limit of 1 on a `warehouse` tag. That limit also respects DuckDB's single-writer rule.
 
-- Raw is per load and never modified, so any past state rebuilds with `rebuild --load-id <id>`.
-- A backfill of more years or countries is a config change and a run.
+**Late, corrected or changed source data (R-PRD-02)**
 
-**Mapping to cloud services**
+- **Revisions survive.** The API serves current values only and overwrites history at the source. Raw keeps every response body per load, so every revision survives.
+- **Change history.** Each materialization of `raw/api_responses` records each indicator's `source_last_updated` and body hashes as Dagster metadata. A body that changed while `lastupdated` did not is visible in the asset's metadata history.
+- **Revisions view (next step).** Add a dbt snapshot on `fct_indicator_year` for value history, and a `rpt_revisions` view listing values that changed between loads and by how much. An asset check on it warns when revisions pass a threshold.
+- **Withdrawn values.** A value that goes from reported to null shows as `null_in_source`; it is never silently kept.
+
+**Monitoring, alerting, data-quality failures (R-PRD-03)**
+
+Monitoring, in the Dagster UI:
+
+- **Runs and lineage.** Every run, its logs and the lineage from API pages to CSVs. Each asset shows when it was last materialized and by which run.
+- **Metadata over time.** Each materialization attaches metadata, which the UI plots over time:
+  - pages and records per indicator;
+  - pages with `attempt > 1` and rejected bodies;
+  - `reported` rows;
+  - `warn` test failures;
+  - run duration.
+
+  A rise in `attempt > 1` means the API's caching problem got worse.
+
+Data quality, as asset checks:
+
+- **dbt tests.** Every dbt test becomes an asset check through `dagster-dbt`.
+  - An `error` test that fails stops `dbt build` before the downstream models. `reports_csv` is then not materialized, and the last good CSVs stay in place, the same guarantee as the local swap-on-green.
+  - `warn` tests become non-blocking checks with WARN severity.
+- **`reconcile`** runs as a blocking asset check on `reports_csv`. All 13 of its checks must pass.
+- **Extra checks:**
+  - `reported` rows not lower than in the previous load;
+  - revisions under a threshold;
+  - pages with `attempt > 1` under a threshold;
+  - a run that failed after its `validation_attempts` is already a failed run.
+- **Freshness.** A freshness check on `fct_indicator_year` fails when there is no completed load inside the schedule window, for example 36 hours for a daily schedule.
+
+Alerting. These are sensors run by the Dagster daemon, all open source:
+
+- **Run failures.** A run-failure sensor posts to Slack (`dagster-slack`), Microsoft Teams (`dagster-msteams`) or email. The message carries the run link and the failing step: a validation that ran out of attempts, an API error id, or a failing dbt test.
+- **Failed checks.** A sensor reads failed check evaluations from Dagster's event log. It alerts on any failed `error` check, and on a `warn` check that fails several runs in a row.
+- **Freshness.** A freshness failure alerts the same way, so a run that silently never started is noticed too.
+
+**Backfills and replay (R-PRD-04)**
+
+- **Replay.** Raw is per load and never modified, so any past state can be rebuilt. In Dagster, that is the job launched from the UI with `load_id` in its run config, with no API call.
+- **Backfills.** Adding years or countries is a config change and a run. With indicator partitions, the Dagster UI launches a backfill over any set of partitions and tracks the status of each one.
+- **History.** Every replay and backfill run is recorded with its config, so the run history shows which load produced the current CSVs.
+
+**Mapping to cloud services (R-PRD-05)**
 
 | Local | Snowflake + AWS | Azure |
 | --- | --- | --- |
-| Docker image | ECR image on ECS Fargate, or the dlt source as a Glue Python shell job; EMR is overkill at this volume | ACR image on Azure Container Apps jobs |
-| Streamlit dashboard container | Streamlit in Snowflake over the reporting views, or the same image as an ECS service | The same image on Azure Container Apps |
+| Docker image | ECR image; Dagster launches each run as an ECS Fargate task (`dagster-aws` ECS run launcher). If Glue is the platform standard, Dagster can instead start the dlt step as a Glue Python shell job through `dagster-aws` Pipes. EMR is overkill at this volume | ACR image; runs as Kubernetes jobs on AKS (`dagster-k8s`) |
+| — (Dagster in production only) | Dagster webserver and daemon on ECS Fargate; run and event storage in RDS PostgreSQL | Dagster on AKS with the official Helm chart; storage in Azure Database for PostgreSQL |
+| `docker compose run` | A Dagster schedule plus the `lastupdated` sensor | Same |
 | dlt into DuckDB `raw` | dlt's Snowflake destination writing the same raw tables, or dlt to S3 loaded by Snowpipe into a VARIANT table | dlt into Snowflake on Azure, or to ADLS Gen2 behind an external stage |
-| dbt-duckdb | dbt-snowflake, same models; JSON paths move to `:` syntax and `FLATTEN` | Same |
-| CSV swap after a green build | Staging schema plus `ALTER SCHEMA ... SWAP WITH` | Same |
-| `docker compose run` | Step Functions or MWAA: extract, `dbt build`, swap | Data Factory pipeline |
-| Test failures and alerts | dbt results and `_dlt_loads` status to SNS or Slack | Azure Monitor alerts |
+| dbt-duckdb | dbt-snowflake, same models; JSON paths move to `:` syntax and `FLATTEN`; tests surface as Dagster asset checks | Same |
+| CSV swap after a green build | Build into a staging schema, then `ALTER SCHEMA ... SWAP WITH` as the final asset, behind the blocking checks | Same |
+| Test failures and alerts | Dagster asset checks, freshness checks and sensors to Slack, email or SNS | Dagster asset checks and sensors to Teams or email |
+| Streamlit dashboard container | Streamlit in Snowflake over the reporting views, or the same image as an ECS service | The same image on Azure Container Apps |
+
 
 ---
 
@@ -598,7 +654,7 @@ docker compose run --rm test
 | Staging and marts | The staging and marts models, a description on every model and column, schema tests and singular tests (Claude) | Asked for dbt tests to be part of the build, so they run on every `dbt build`, not as a separate step. Set the model's core rule: missing is a status, never 0 (D-01, D-02) | `dbt build` runs 11 models and 77 tests with PASS=88. A deliberately broken view stopped the export and left `output/` untouched. The fact table has 252 rows, all `reported`, and GDP per capita matches GDP ÷ population to about 1e-15. **To check yourself:** items 7 and 8 |
 | Reporting | The four `rpt_*` views, the year-over-year and income-group reconciliation tests, the CSV export, `reconcile.py` (Claude) | Ruled that `requirements.md` decides the report logic: each country's own latest reported year (D-04), and a zero prior that keeps `abs_change` with no `pct_change` (D-03). Asked for proof that the CSVs match their source tables, which added the `reconcile` command | Three layers. (1) `reconcile` checks each CSV against its view row for row, the row counts against the load's scope, every CSV value against `fct_indicator_year`, every fact against its raw API record, and the income-group sums against the country totals: 13 of 13 OK on the committed output. (2) The dbt tests `assert_lineage_resolves_to_raw`, `assert_yoy_change_matches_status` and `assert_income_groups_reconcile` run on every build. (3) `test_reconcile_*` shows the command catches a CSV edited by hand. **To check yourself:** items 3 and 5 |
 | pytest | `conftest.py` with the fake API, and the test suite: 66 tests in five files (Claude) | Required that tests never call the live API (R-DQ-03) and that they run in Docker exactly as documented | 66 tests pass locally and in `docker compose run --rm test` with no network. A mutation check, with the `indicator.id` check disabled, made three tests fail. **To check yourself:** item 11 |
-| README | The sections filled in from the live run and test results: quick start timing, observed API behavior, dropped fields, report summaries, test tables, decisions (Claude) | Reviewed the README against `requirements.md` and chose the fixes: requirement rules first, wrong-body handling, the 90-second timeout, `per_page: 50`, broken links removed. Asked for this section to state that I chose the stack, and to record my guidance here | Every TODO was replaced with what the build did. The numbers (timings, row counts, test counts) come from the runs above. **To check yourself:** read Assumptions and Trade-offs and confirm they match your intent |
+| README | The sections filled in from the live run and test results: quick start timing, observed API behavior, dropped fields, report summaries, test tables, decisions (Claude) | Reviewed the README against `requirements.md` and chose the fixes: requirement rules first, wrong-body handling, the 90-second timeout, `per_page: 50`, broken links removed. Asked for this section to state that I chose the stack, and to record my guidance here. Chose Dagster (open source) for production monitoring, alerting and data quality, and had the production design note written around it | Every TODO was replaced with what the build did. The numbers (timings, row counts, test counts) come from the runs above. **To check yourself:** read Assumptions and Trade-offs and confirm they match your intent |
 | Dashboard | `dashboard/app.py`, the `dashboard` Docker stage and Compose service, `test_dashboard.py` (Claude) | Asked what a Streamlit page would add before deciding: about 285 MB of packages, for a 779 MB image. Then had it built in its own Docker stage and PR, so the pipeline image stays unchanged | The `worldbank-dashboard` container is healthy, and all four tabs were checked in a browser. `test_dashboard_*` (7 tests) render the page from a real pipeline run on the recorded responses. **To check yourself:** item 9 |
 | CI | `.github/workflows/ci.yml` (Claude) | Asked for `docker compose run --rm test` on every push | The first run, on `ci/docker-tests`, passed in about 2.5 minutes. **To check yourself:** item 10 |
 
@@ -674,6 +730,7 @@ Run these from the repository folder. Items 6 to 8 change `config/pipeline.yml` 
 
 Not built:
 
+- **The Dagster project.** The production design note describes it, but it isn't written yet. It needs a `definitions.py` that wraps the dlt source (`@dlt_assets`) and the dbt project (`@dbt_assets`), plus the export as an asset, `reconcile` as an asset check, and the schedule, sensors and freshness checks. That is a thin layer over the existing code.
 - **Historical income classifications.** The v2 API returns only the current group (D-05). The World Bank's historical classification file (OGHIST) could become a seed with a `year` column, joined in `rpt_income_group_by_year`.
 - **A live check of a cache-buster recovery.** No wrong body occurred in the live runs, so that path is covered by tests on recorded wrong bodies only.
 
