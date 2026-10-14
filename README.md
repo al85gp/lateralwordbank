@@ -93,7 +93,7 @@ python3.12 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt -c con
 | D-01, D-02 | Missing data is an outcome, not zero | Spine-based fact with `value_status` | `fct_indicator_year` | `accepted_values`, `assert_spine_complete` |
 | R-ANL-01 – R-ANL-04 | The four analytics questions | One dbt view each, exported to CSV | `dbt/models/reporting/`, `output/` | `test_end_to_end`, `assert_yoy_change_matches_status`, `assert_income_groups_reconcile` |
 | R-ANL-05 | *Optional* extra view or dashboard | Streamlit dashboard over the four reports: coverage, year-over-year, latest year, income groups | `dashboard/app.py`, `docker-compose.yml` | `test_dashboard_*` |
-| R-DQ-01 | Correctness and safe reprocessing | dbt tests on every run, pytest suite | `dbt/tests/`, `tests/` | Data quality and tests section |
+| R-DQ-01 | Correctness and safe reprocessing | dbt tests on every run; pytest suite, run by CI on every push | `dbt/tests/`, `tests/`, `.github/workflows/ci.yml` | Data quality and tests section |
 | R-DQ-02, D-06 | Related indicators consistent | GDP per capita within 1% of GDP ÷ population | Singular dbt test (warn) | `test_consistency_warning_does_not_block_export`; warning rows in the run output |
 | R-DQ-03, D-10 | Tests never call the live API | `requests-mock` with recorded fixtures; the `test` service has no network | `tests/`, `docker-compose.yml` | Any live call fails the suite |
 | R-PRD-01 – R-PRD-05 | Production design note | Scheduling, late data, monitoring, backfills, cloud mapping | Production design note section | — |
@@ -137,6 +137,7 @@ The raw layer is the only state that matters: drop every schema below it and `re
 ```text
 lateralwordbank/
 ├── README.md
+├── .github/workflows/ci.yml  # CI: docker compose run --rm test on every push
 ├── requirements.md           # the brief's requirements with IDs
 ├── Dockerfile                # python:3.12-slim; stages runtime and test; runs as the host user
 ├── docker-compose.yml        # project lateralwordbank: pipeline, test (profile test, network_mode: none); mounts data/ and output/
@@ -438,6 +439,23 @@ The consistency checks warn rather than fail: the source revises indicators on d
 
 The suite can fail: with the `indicator.id` check in `source.py` disabled on purpose, three tests fail, including both `test_wrong_body_retry` tests that expect a wrong body to be rejected.
 
+### CI
+
+`.github/workflows/ci.yml` runs on every push to every branch, and can also be started by hand from the Actions tab. It runs the same commands as locally:
+
+```bash
+docker compose build test
+```
+
+```bash
+docker compose run --rm test
+```
+
+- **Same as local:** CI uses the same image, tests and no-network rule as a local run, and never calls the World Bank API.
+- **Fails on any failing test:** a failing test fails the run, which shows as a red check on the commit and on its pull request.
+- **One run per branch:** a newer push to the same branch cancels the run it replaces.
+- **Pinned and read-only:** `actions/checkout` is pinned to a commit, and the job only has read access to the repository.
+
 ---
 
 ## Key decisions walkthrough
@@ -557,6 +575,7 @@ The suite can fail: with the `indicator.id` check in `source.py` disabled on pur
 | pytest | `conftest.py` with the fake API, 57 tests across four files (Claude) | | |
 | README | The sections filled in from the live run and test results: quick start timing, observed API behavior, dropped fields, report summaries, test tables, decisions (Claude) | | |
 | Dashboard | `dashboard/app.py`, the `dashboard` Docker stage and Compose service, `test_dashboard.py` (Claude) | | |
+| CI | `.github/workflows/ci.yml` (Claude) | | |
 
 Checks Claude ran while drafting:
 
@@ -585,4 +604,3 @@ Known next steps beyond the brief:
 - dbt snapshot on `fct_indicator_year` and a `rpt_revisions` view for value history.
 - Incremental refresh driven by `lastupdated`.
 - A retention rule for `raw.api_responses`.
-- A CI workflow that runs `docker compose run --rm test` on every push.
