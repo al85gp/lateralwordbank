@@ -1,0 +1,151 @@
+version: 2
+
+models:
+  - name: rpt_missing_or_incomplete
+    description: >
+      R-ANL-01. Every country x indicator x year in scope without a reported value, with the
+      coverage of its series. Empty when every requested value was reported.
+    data_tests:
+      - unique:
+          column_name: "concat_ws('|', indicator_code, country_iso3, year)"
+    columns:
+      - name: indicator_code
+        description: Indicator code.
+        data_tests: [not_null]
+      - name: indicator_name
+        description: Indicator name.
+      - name: country_iso3
+        description: Country ISO3 code.
+        data_tests: [not_null]
+      - name: country_name
+        description: Country name.
+      - name: year
+        description: Year.
+        data_tests: [not_null]
+      - name: value_status
+        description: "`null_in_source` or `not_returned`."
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [null_in_source, not_returned]
+      - name: years_reported
+        description: Years with a reported value in this country's series for the indicator.
+      - name: years_expected
+        description: Years requested for the series.
+      - name: request_url
+        description: Lineage; null when not_returned.
+      - name: body_sha256
+        description: Lineage; null when not_returned.
+      - name: record_index
+        description: Lineage; null when not_returned.
+
+  - name: rpt_yoy_change
+    description: >
+      R-ANL-02. Year-over-year change per country, indicator and year. The prior year is exactly
+      year - 1. Missing values never become 0: a change that can't be computed is null, and
+      change_status says why.
+    data_tests:
+      - unique:
+          column_name: "concat_ws('|', indicator_code, country_iso3, year)"
+    columns:
+      - name: indicator_code
+        description: Indicator code.
+        data_tests: [not_null]
+      - name: indicator_name
+        description: Indicator name.
+      - name: country_iso3
+        description: Country ISO3 code.
+        data_tests: [not_null]
+      - name: country_name
+        description: Country name.
+      - name: year
+        description: Year.
+        data_tests: [not_null]
+      - name: value
+        description: This year's value.
+      - name: prior_year
+        description: year - 1.
+      - name: prior_value
+        description: The prior year's value; null when missing or outside scope.
+      - name: abs_change
+        description: value - prior_value; null when either is missing.
+      - name: pct_change
+        description: Change in percent of the prior value; null when either value is missing or the prior value is 0.
+      - name: change_status
+        description: "`ok`, `first_year_in_scope`, `no_current_value`, `no_prior_value` or `prior_is_zero`."
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [ok, first_year_in_scope, no_current_value, no_prior_value, prior_is_zero]
+      - name: request_url
+        description: Lineage of this year's value.
+      - name: body_sha256
+        description: Lineage of this year's value.
+      - name: record_index
+        description: Lineage of this year's value.
+
+  - name: rpt_latest_comparison
+    description: >
+      R-ANL-03. Per indicator and country: the country's latest year with a reported value (D-04),
+      that value, its rank among countries, and how many years it lags the most recent one.
+    data_tests:
+      - unique:
+          column_name: "concat_ws('|', indicator_code, country_iso3)"
+    columns:
+      - name: indicator_code
+        description: Indicator code.
+        data_tests: [not_null]
+      - name: indicator_name
+        description: Indicator name.
+      - name: unit
+        description: Unit of the value.
+      - name: country_iso3
+        description: Country ISO3 code.
+        data_tests: [not_null]
+      - name: country_name
+        description: Country name.
+      - name: latest_year
+        description: This country's latest year with a reported value; null when it has none in scope.
+      - name: value
+        description: The value in latest_year.
+      - name: value_rank
+        description: Rank by value within the indicator, 1 = highest; ties share a rank; null without a value.
+      - name: years_behind
+        description: The indicator's most recent latest_year across countries minus this country's; 0 when current.
+      - name: request_url
+        description: Lineage of the value.
+      - name: body_sha256
+        description: Lineage of the value.
+      - name: record_index
+        description: Lineage of the value.
+
+  - name: rpt_income_group_by_year
+    description: >
+      R-ANL-04. Indicators aggregated by current income group and year: `sum` or
+      `population_weighted_mean` per config, over reporting countries only, with coverage.
+    data_tests:
+      - unique:
+          column_name: "concat_ws('|', indicator_code, income_group_code, year)"
+    columns:
+      - name: indicator_code
+        description: Indicator code.
+        data_tests: [not_null]
+      - name: income_group_code
+        description: Current World Bank income classification id.
+        data_tests: [not_null]
+      - name: income_group_name
+        description: Current World Bank income classification name.
+      - name: year
+        description: Year.
+        data_tests: [not_null]
+      - name: aggregation
+        description: "`sum` or `population_weighted_mean` (weighted by population of the same country and year)."
+      - name: value
+        description: The aggregate over reporting countries; null when none report.
+      - name: countries_in_group
+        description: Countries in scope in this income group.
+      - name: countries_reporting
+        description: Countries that contributed (for a weighted mean, both the value and the population reported).
+      - name: is_complete
+        description: True when every country in the group contributed.
