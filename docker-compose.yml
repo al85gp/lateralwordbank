@@ -1,11 +1,16 @@
+name: lateralwordbank
+
 services:
-  # docker compose run --rm --build pipeline              -> extract, dbt build, export CSVs
+  # docker compose up --build                             -> run once in the container "worldbank-pipeline",
+  #                                                          which stays in Docker Desktop with its logs
+  # docker compose run --rm --build pipeline              -> the same run in a throwaway container
   # docker compose run --rm pipeline rebuild --load-id X  -> rebuild from raw, no API calls
   pipeline:
     build:
       context: .
       target: runtime
     image: wb-pipeline:local
+    container_name: worldbank-pipeline
     # Run as the host user so files written to data/ and output/ belong to them.
     user: "${UID:-1000}:${GID:-1000}"
     volumes:
@@ -13,10 +18,13 @@ services:
       - ./output:/app/output
 
   # docker compose run --rm test  -> every test, with no network at all
+  # docker compose --profile test up test  -> the same, kept as container "worldbank-tests"
   test:
+    profiles: [test]  # not started by a plain `docker compose up`
     build:
       context: .
       target: test
     image: wb-pipeline-test:local
+    container_name: worldbank-tests
     user: "${UID:-1000}:${GID:-1000}"
     network_mode: none
