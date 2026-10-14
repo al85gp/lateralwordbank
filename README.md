@@ -21,6 +21,18 @@ docker compose run --rm --build pipeline     # extract, dbt build, export CSVs t
 docker compose run --rm test                 # every test, no network access
 ```
 
+The pipeline is a batch job: it runs for about 10 seconds and exits. `--rm` removes its container when it finishes. To keep the container in Docker Desktop with its logs, use `up` instead. It shows as `worldbank-pipeline` in the `lateralwordbank` project and reads "Exited (0)" after a successful run:
+
+```bash
+docker compose up --build
+```
+
+```bash
+docker compose --profile test up test
+```
+
+The second command keeps the test run as the `worldbank-tests` container. The `test` service sits behind a profile, so a plain `docker compose up` starts only the pipeline.
+
 What you get:
 
 | Output | Contents |
@@ -117,7 +129,7 @@ lateralwordbank/
 ├── README.md
 ├── requirements.md           # the brief's requirements with IDs
 ├── Dockerfile                # python:3.12-slim; stages runtime and test; runs as the host user
-├── docker-compose.yml        # services: pipeline, test (network_mode: none); mounts data/ and output/
+├── docker-compose.yml        # project lateralwordbank: pipeline, test (profile test, network_mode: none); mounts data/ and output/
 ├── requirements.txt          # dlt[duckdb], duckdb, dbt-core, dbt-duckdb, pyyaml (pinned)
 ├── requirements-dev.txt      # pytest, requests-mock (pinned)
 ├── constraints.txt           # every transitive version, pinned
