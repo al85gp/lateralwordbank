@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/USA/indicator/SP.POP.TOTL?format=json&date=2022:2019",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:28:33Z",
+  "notes": "Fresh reversed range on another country (never requested before, cf MISS, 5.46 s): HTTP 200, total 4, rows 2022..2019. The API normalizes a reversed range rather than erroring. (curl http_code/time_total/bytes: 200 5.461366 902). Saved by the adversarial verifier."
+}

@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/countryz?format=json",
+  "http_status": 404,
+  "content_type": "text/html; charset=UTF-8",
+  "fetched_at_utc": "2026-10-14T01:16:44Z",
+  "notes": "Unknown endpoint path: real HTTP 404 with an HTML (IIS-style) body starting with a UTF-8 BOM, NOT the JSON error envelope. Saved byte-for-byte as .html."
+}

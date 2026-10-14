@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;CAN;DEU;GBR;IND;JPN;MEX;USA;ZAF/indicator/SP.POP.TOTL?format=json&date=2018:2024&footnote=y&per_page=100",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:12:35Z",
+  "notes": "Observation call with footnote=y: envelope has sourceid '2' and lastupdated '2026-10-08' (same as source/2). Rows carry footnote ('' or text); only DEU 2022 and 2023 have 'Break in series.'. per_page is a JSON number here. Without footnote=y the footnote key is absent from rows."
+}

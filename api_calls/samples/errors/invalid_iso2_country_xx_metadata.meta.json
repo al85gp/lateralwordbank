@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/XX?format=json",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:15:47Z",
+  "notes": "ERROR PAYLOAD WITH HTTP 200. /country/XX -> id 120. Served from Cloudflare cache (HIT, age 64145s, last-modified 2026-10-13T00:20:51Z) - error responses are cached at the edge for ~a day."
+}

@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/IND/indicator/DPANUSSPF?format=json&mrv=2&frequency=M",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:34:50Z",
+  "notes": "VERIFIER fixture, OUT OF SCOPE (source 15, Global Economic Monitor). Monthly date strings ('2026M08'). In this source country.id is the ISO3 'IND' and countryiso3code is an EMPTY STRING - unlike WDI (source 2), where country.id is ISO2 and countryiso3code is ISO3. Supports pinning source=2 and validating countryiso3code is non-empty."
+}

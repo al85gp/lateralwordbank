@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/ESP;PRT/indicator/SP.DYN.LE00.IN?format=json&mrnev=2",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:59:54Z",
+  "notes": "CRITIC (completeness pass). Step F of a second inner-cache test (out-of-scope countries, banned param). Genuine mrnev=2 body: sourceid null, rows without a unit key. Fresh render (charset=utf-8, 0.35 s)."
+}

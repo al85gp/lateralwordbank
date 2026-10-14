@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/sources/57/country/VEN/metadata?format=json",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T02:02:56Z",
+  "notes": "CRITIC (completeness pass). /sources/57/country/VEN/metadata without a version. Byte-identical (sha256 d4dbdee7...) to the /version/202307/ request, proving the version segment is ignored. Both were fresh renders (charset=utf-8, MISS, 0.24 s), so this is not a cache substitution."
+}

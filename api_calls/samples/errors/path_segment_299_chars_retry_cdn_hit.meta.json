@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA/indicator/SP.POP.TOTL?format=json&date=2024&per_page=5",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:16:43Z",
+  "notes": "Retry of the timed-out 299-char segment request (BRA x75) -> HTTP 200 in 0.12s, cf-cache-status HIT age 90: the CDN cached the response the origin produced after our client gave up. Duplicate codes are de-duplicated (total 1). A 299-char segment is accepted."
+}

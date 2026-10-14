@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA/indicator/SP.POP.TOTL/?format=json&date=2018:2024",
+  "http_status": 200,
+  "content_type": "application/json",
+  "fetched_at_utc": "2026-10-14T01:12:45Z",
+  "notes": "Trailing slash after indicator code accepted; body byte-identical to baseline. Note Content-Type here was 'application/json' (no charset) whereas most responses say 'application/json;charset=utf-8'."
+}

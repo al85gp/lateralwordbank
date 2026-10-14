@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/DEU/indicator/SP.POP.TOTL?format=json&date=2022:2023",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:13:21Z",
+  "notes": "Same data without footnote param: rows have NO footnote key at all (schema differs by parameter). This cache MISS took ~9.8 s."
+}

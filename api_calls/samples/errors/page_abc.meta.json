@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA/indicator/SP.POP.TOTL?format=json&date=2018:2024&per_page=5&page=abc",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:17:40Z",
+  "notes": "ERROR PAYLOAD WITH HTTP 200. page=abc -> id 120."
+}

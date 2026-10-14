@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA/indicator/SP.POP.TOTL?source=9999&format=json&date=2023:2024",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:13:49Z",
+  "notes": "ERROR PAYLOAD WITH HTTP 200. source=9999 -> message array with TWO id-120 entries; message is a list and can hold more than one entry."
+}

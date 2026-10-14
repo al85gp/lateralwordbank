@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v9/country/BRA?format=json",
+  "http_status": 404,
+  "content_type": "application/json",
+  "fetched_at_utc": "2026-10-14T01:13:38Z",
+  "notes": "/v9/... -> HTTP 404, Content-Type application/json, body is a JSON OBJECT {\"statusCode\": 404, \"message\": \"Resource not found\"} - a different shape from the wb message envelope (likely a gateway layer). cf-cache-status DYNAMIC."
+}

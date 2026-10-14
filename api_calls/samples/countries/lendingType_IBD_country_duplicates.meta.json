@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/lendingType/IBD/country?format=json&per_page=200",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:25:37Z",
+  "notes": "Verifier sample. Lending-type filter returns every IBRD economy TWICE (identical records, adjacent): envelope total=134 but only 67 unique ids. Same with ?lendingType=IBD / ?lendingtype=IBD and with lendingType/IDX/country (118 rows, 59 unique); lendingType/LNX/country and incomeLevel/*/country and region/*/country have no duplicates. Dedupe by id if this endpoint is ever used."
+}

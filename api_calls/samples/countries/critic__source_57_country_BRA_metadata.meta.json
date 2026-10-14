@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/sources/57/country/BRA/metadata?format=json",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T02:02:04Z",
+  "notes": "CRITIC (completeness pass). Metadata API on source 57 for BRA: Country concept incl. IncomeGroup 'Upper middle income', no version or year attribute. Some other metatypes differ from source 2 (e.g. Latesttradedata), so this is an archived snapshot, but its version is not stated."
+}

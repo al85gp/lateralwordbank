@@ -1,0 +1,10 @@
+{
+  "url": "https://api.worldbank.org/v2/indicator/SP.POP.TOTL?format=json",
+  "http_status": 304,
+  "content_type": null,
+  "fetched_at_utc": "2026-10-14T01:13:04Z",
+  "notes": "Conditional request on indicator metadata with If-Modified-Since equal to its Last-Modified -> HTTP 304 (cf HIT, age 78391, max-age 35524). set-cookie values redacted.",
+  "request_headers": [
+    "If-Modified-Since: Mon, 12 Oct 2026 13:18:37 GMT"
+  ]
+}

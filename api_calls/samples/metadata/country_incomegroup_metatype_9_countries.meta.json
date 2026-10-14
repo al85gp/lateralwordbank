@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/sources/2/country/BRA;CAN;DEU;GBR;IND;JPN;MEX;USA;ZAF/metatypes/incomegroup/metadata?format=json",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:16:15Z",
+  "notes": "Metadata API metatype filter: /sources/2/country/{iso3s}/metatypes/incomegroup/metadata. Returns IncomeGroup only (current classification, not historical)."
+}

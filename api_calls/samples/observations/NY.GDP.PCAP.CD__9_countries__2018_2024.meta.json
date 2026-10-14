@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;CAN;DEU;GBR;IND;JPN;MEX;USA;ZAF/indicator/NY.GDP.PCAP.CD?source=2&format=json&date=2018:2024&per_page=1000",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:21:53Z",
+  "notes": "GOLDEN FIXTURE (exact recommended production URL): NY.GDP.PCAP.CD for 9 countries (ISO3, semicolon list) x 2018:2024 inclusive, source=2 (WDI), per_page=1000 -> 1 page, 63 rows. Byte-identical to the same call without source= fetched ~15 min earlier (same lastupdated 2026-10-08)."
+}

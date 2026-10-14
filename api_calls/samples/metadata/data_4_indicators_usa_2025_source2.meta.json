@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/USA/indicator/SP.POP.TOTL;NY.GDP.MKTP.CD;NY.GDP.PCAP.CD;SP.DYN.LE00.IN?format=json&source=2&date=2025",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:30:33Z",
+  "notes": "Verifier. 2025 values exist for SP.POP.TOTL, NY.GDP.MKTP.CD (integer literal 30769700000000), NY.GDP.PCAP.CD; SP.DYN.LE00.IN 2025 row is present with value null. sourceid null (multi-indicator)."
+}

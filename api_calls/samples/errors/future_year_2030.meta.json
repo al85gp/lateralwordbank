@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA/indicator/SP.POP.TOTL?format=json&date=2030",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:13:24Z",
+  "notes": "date=2030 -> HTTP 200 'no data' envelope: [{page:0,pages:0,per_page:0,total:0,sourceid:null,lastupdated:null}, null]. Second element is JSON null (not []), meta numbers are 0, sourceid/lastupdated null."
+}

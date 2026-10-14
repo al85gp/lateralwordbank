@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/sources/2/concepts?format=json",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:11:44Z",
+  "notes": "Concepts for source 2 (Country, Series, Time). Different envelope shape: a JSON object (not a 2-element array) and per_page is a JSON number 50 here."
+}

@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA/indicator/SP.POP.TOTL?date=2018:2024&format=jsonstat",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:11:06Z",
+  "notes": "format=jsonstat; JSON-stat object keyed by source ('WDI'), no page/pages/per_page meta at all. Not used by the pipeline."
+}

@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;USA/indicator/SP.DYN.LE00.IN?format=json&date=2018:2024&mrv=3",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:15:51Z",
+  "notes": "date=2018:2024 plus mrv=3: only 3 years per country returned (2022-2024), so mrv overrides/narrows the date range. Byte-identical to mrv=3 without date."
+}

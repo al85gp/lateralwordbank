@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/br;ca;de;gb;in;jp;mx;us;za/indicator/sp.pop.totl?format=json&date=2024&per_page=1000",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:14:05Z",
+  "notes": "Country path given as lowercase ISO2 codes and indicator in lowercase. Checks code case/ISO2 acceptance and what ids are echoed back."
+}

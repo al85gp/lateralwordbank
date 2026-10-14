@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;CAN;DEU;GBR;IND;JPN;MEX;USA;ZAF/indicator/SP.DYN.LE00.IN?source=2&format=json&date=2018:2024&per_page=1000&footnote=y",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T02:01:52Z",
+  "notes": "CRITIC (completeness pass). Golden R11 URL + footnote=y (decision D4 variant). Fresh render (charset=utf-8, cf MISS, 0.93 s). Every row has a footnote key, all \"\"; envelope and values identical to the golden R11 fixture apart from the added key. With the existing R8 variant, the in-scope footnote census is complete: 2 of 252 cells (DEU SP.POP.TOTL 2022, 2023 'Break in series.')."
+}

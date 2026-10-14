@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/XXX/indicator/SP.POP.TOTL?date=2018:2024",
+  "http_status": 200,
+  "content_type": "text/xml",
+  "fetched_at_utc": "2026-10-14T01:12:36Z",
+  "notes": "ERROR PAYLOAD WITH HTTP 200 in XML (no format param): <wb:error xmlns:wb=...><wb:message id=\"120\" key=\"Invalid value\">...</wb:message></wb:error>."
+}

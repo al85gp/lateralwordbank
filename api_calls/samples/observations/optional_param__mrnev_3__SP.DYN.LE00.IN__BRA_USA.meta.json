@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;USA/indicator/SP.DYN.LE00.IN?format=json&mrnev=3",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:15:47Z",
+  "notes": "mrnev=3: same rows as mrv=3 here (no gaps), but envelope sourceid is JSON null instead of \"2\"."
+}

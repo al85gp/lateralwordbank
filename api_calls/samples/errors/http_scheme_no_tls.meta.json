@@ -1,0 +1,7 @@
+{
+  "url": "http://api.worldbank.org/v2/country/BRA/indicator/SP.POP.TOTL?format=json&date=2018:2024",
+  "http_status": 302,
+  "content_type": "text/html; charset=UTF-8",
+  "fetched_at_utc": "2026-10-14T01:12:52Z",
+  "notes": "http:// -> HTTP/1.1 302 Found from Cloudflare, Location: same URL on https://. Body is a Cloudflare HTML stub. Clients that follow redirects will work but should use https directly."
+}

@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/USA/indicator/SP.POP.TOTL?format=json&date=2024:2018",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:18:52Z",
+  "notes": "Reversed date range (start > end)."
+}

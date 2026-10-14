@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;CAN;DEU;GBR;IND;JPN;MEX;USA;ZAF/indicator/SP.POP.TOTL?format=json&date=2018:2024&footnote=y&per_page=100",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:12:35Z",
+  "notes": "Response headers of a data call on a Cloudflare cache MISS: Cache-Control public, max-age=86400; Last-Modified equals the response generation time (not a data-change time); no ETag. set-cookie values redacted."
+}

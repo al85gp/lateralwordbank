@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA/indicator/SP.POP.TOTL?format=json&date=2018:2024&per_page=100000",
+  "http_status": 400,
+  "content_type": "text/html",
+  "fetched_at_utc": "2026-10-14T01:16:00Z",
+  "notes": "per_page=100000 -> HTTP 400 text/html WCF 'Request Error' page (same body as reversed date range). 6.0s. Not cached (BYPASS)."
+}

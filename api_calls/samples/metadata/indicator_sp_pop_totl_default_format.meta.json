@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/indicator/SP.POP.TOTL",
+  "http_status": 200,
+  "content_type": "text/xml",
+  "fetched_at_utc": "2026-10-14T01:13:33Z",
+  "notes": "No format parameter: default response is XML (text/xml), envelope attributes page/pages/per_page/total."
+}

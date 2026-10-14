@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/HIC;UMC;LMC;LIC/indicator/NY.GDP.PCAP.CD?format=json&date=2018:2024&per_page=100",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T02:00:59Z",
+  "notes": "CRITIC (completeness pass). Optional benchmark R14: income-group aggregates for GDP per capita, 2018-2024. 28 rows, no nulls, all float tokens, decimal 1, countryiso3code \"\". cf HIT (copy rendered 01:31:02 by the area-01 verifier)."
+}

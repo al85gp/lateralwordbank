@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/source/2?format=json&cb=critic20261014a",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:59:09Z",
+  "notes": "CRITIC (completeness pass). R0 + unknown param cb=critic20261014a. Cloudflare MISS, Content-Type with charset, last-modified = date, max-age=86400, 0.17 s: a fresh origin render. Body byte-identical to source_2_wdi.json. A cache-busted R0 is a cheap (1 request) way to read the current WDI release date without the up-to-24 h edge lag (production change-detection probe)."
+}

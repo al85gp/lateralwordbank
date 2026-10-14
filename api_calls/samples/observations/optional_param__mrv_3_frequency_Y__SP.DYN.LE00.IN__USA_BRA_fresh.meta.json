@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/USA;BRA/indicator/SP.DYN.LE00.IN?format=json&mrv=3&frequency=Y",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:18:27Z",
+  "notes": "Fresh URL retest of mrv=3&frequency=Y (country order swapped vs the suspect cached one)."
+}

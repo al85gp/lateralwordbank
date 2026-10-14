@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/QQQ/indicator/SP.POP.TOTL?format=json&date=2023:2024",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:15:48Z",
+  "notes": "ERROR PAYLOAD WITH HTTP 200. Second invalid ISO3 (QQQ) on data endpoint -> id 120, confirms XXX behavior."
+}

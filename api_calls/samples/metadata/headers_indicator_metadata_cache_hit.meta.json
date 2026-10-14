@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/indicator/SP.POP.TOTL?format=json",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:11:13Z",
+  "notes": "Indicator metadata headers: cf HIT, age 78280, cache-control max-age=35524, Last-Modified Mon, 12 Oct 2026 13:18:37 GMT, no ETag. set-cookie values redacted."
+}

@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;CAN;DEU;GBR;IND;JPN;MEX;USA;ZAF/indicator/SP.POP.TOTL;NY.GDP.MKTP.CD;NY.GDP.PCAP.CD;SP.DYN.LE00.IN?format=json&source=2&date=2018:2024&footnote=y&per_page=300",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:17:00Z",
+  "notes": "Full metadata-relevant scope in one data call (4 indicators x 9 countries x 2018-2024 = 252 rows, 1 page at per_page=300). Envelope sourceid is JSON null for multi-indicator calls (vs '2' for single-indicator calls); lastupdated '2026-10-08'. Footnote census: only DEU SP.POP.TOTL 2022 and 2023 carry 'Break in series.'; obs_status '' on all rows; no null values in scope on fetch date. Cache MISS, 1.14 s."
+}

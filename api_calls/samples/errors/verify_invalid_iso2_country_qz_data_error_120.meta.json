@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/QZ/indicator/SP.POP.TOTL?format=json&date=2023:2024",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:27:18Z",
+  "notes": "Another unknown ISO2 code (QZ) on the DATA endpoint returns error id 120 (102 bytes, same sha256 f230e5b6...), NOT the no-data envelope that XX returns. ZZ behaved the same (id 120). The XX no-data behavior is specific to XX. (curl http_code/time_total/bytes: 200 0.284426 102). Saved by the adversarial verifier."
+}

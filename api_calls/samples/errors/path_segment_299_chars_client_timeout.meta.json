@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA/indicator/SP.POP.TOTL?format=json&date=2024&per_page=5",
+  "http_status": null,
+  "content_type": null,
+  "fetched_at_utc": "2026-10-14T01:14:40Z",
+  "notes": "CLIENT TIMEOUT: curl -m 30 hit 30.0s with 0 bytes received (curl exit 28), no HTTP status (http_status null) and no body. The origin finished later (see path_segment_299_chars_retry_cdn_hit: last-modified 01:15:12Z, ~32s after this request started) and Cloudflare cached the result."
+}

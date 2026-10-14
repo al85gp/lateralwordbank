@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/indicator/NOT.A.CODE?format=json",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:12:03Z",
+  "notes": "ERROR PAYLOAD WITH HTTP 200. /indicator/NOT.A.CODE -> id 120."
+}

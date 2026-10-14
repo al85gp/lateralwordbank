@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA",
+  "http_status": 200,
+  "content_type": "text/xml",
+  "fetched_at_utc": "2026-10-14T01:12:15Z",
+  "notes": "No format param: API defaults to XML (content-type text/xml). Body saved byte-for-byte as .xml."
+}

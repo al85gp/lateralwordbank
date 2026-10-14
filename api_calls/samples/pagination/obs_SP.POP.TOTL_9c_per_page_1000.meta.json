@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;CAN;DEU;GBR;IND;JPN;MEX;USA;ZAF/indicator/SP.POP.TOTL?format=json&date=2018:2024&per_page=1000",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:12:03Z",
+  "notes": "per_page=1000 -> 1 page, 63 rows. Reference for the pagination-stability comparison: the union of the 7 per_page=10 pages is the same row sequence."
+}

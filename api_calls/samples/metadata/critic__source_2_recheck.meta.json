@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/source/2?format=json",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:59:08Z",
+  "notes": "CRITIC (completeness pass). Exact R0 URL re-fetched 48 min after the golden. Cloudflare HIT, age 23275, max-age=38935, last-modified Tue, 13 Oct 2026 06:20:07 GMT: the watermark every run received today is a copy rendered ~19.7 h earlier. Body byte-identical to source_2_wdi.json (lastupdated 2026-10-08). Shows R0 itself is subject to the ~24 h cache window."
+}

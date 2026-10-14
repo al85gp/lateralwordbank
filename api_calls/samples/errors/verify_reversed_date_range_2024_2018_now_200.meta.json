@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA/indicator/SP.POP.TOTL?format=json&date=2024:2018",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:28:06Z",
+  "notes": "Re-check of evidence row 7 (which got HTTP 400 WCF 'Request Error' at 01:12Z). At 01:28Z the same URL returned HTTP 200 (cf MISS, 3.37 s, last-modified 01:28:10Z) with the 7 rows 2018-2024, byte-identical to baseline_valid_bra_pop_2018_2024.json (sha256 24c384c0...). The reversed-range 400 is NOT deterministic. (curl http_code/time_total/bytes: 200 3.370449 1462). Saved by the adversarial verifier."
+}

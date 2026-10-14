@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/DEU/indicator/SP.POP.TOTL?format=json&date=2022:2023&footnote=n",
+  "http_status": 200,
+  "content_type": "application/json",
+  "fetched_at_utc": "2026-10-14T01:30:32Z",
+  "notes": "Verifier. footnote=n still returns the footnote key with \"Break in series.\" (V2 features doc says n removes it). Content-Type was application/json without charset, unlike other data calls. cf MISS."
+}

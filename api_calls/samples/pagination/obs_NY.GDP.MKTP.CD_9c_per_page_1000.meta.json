@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;CAN;DEU;GBR;IND;JPN;MEX;USA;ZAF/indicator/NY.GDP.MKTP.CD?format=json&date=2018:2024&per_page=1000",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:16:06Z",
+  "notes": "GDP (current US$): 63 rows; 56 values are JSON floats, but the 7 USA values are integer literals (e.g. 29298013000000). Mixed int/float in one column. decimal=0."
+}

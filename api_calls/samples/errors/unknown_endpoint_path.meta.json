@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/notanendpoint?format=json",
+  "http_status": 404,
+  "content_type": "text/html; charset=UTF-8",
+  "fetched_at_utc": "2026-10-14T01:12:26Z",
+  "notes": "HTTP 404, text/html; charset=UTF-8, WCF XHTML page (BOM-prefixed) with text 'Endpoint not found.' Docs list code 140 as response code 400 with a wb error message; live behavior is a 404 HTML page, no wb error envelope. cache-control max-age=14400."
+}

@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;CAN;DEU;GBR;IND;JPN;MEX;USA;ZAF/indicator/SP.POP.TOTL?format=json&date=2018:2024&per_page=10&page=3",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:12:17Z",
+  "notes": "per_page=10, page 3 of 7, 10 rows. Fetch run 1. Run 2 (same URLs, CDN HIT) and run 3 (params reordered so the CDN missed, pages fetched 7->1) were byte-identical. The union of the 7 pages (63 rows, no duplicates, no gaps) is the same ordered sequence as obs_SP.POP.TOTL_9c_per_page_1000.json."
+}

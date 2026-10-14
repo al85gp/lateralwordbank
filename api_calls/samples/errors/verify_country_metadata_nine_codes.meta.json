@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;CAN;DEU;GBR;IND;JPN;MEX;USA;ZAF?format=json&per_page=100",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:29:37Z",
+  "notes": "The exact pipeline country call: 9 rows, ids BRA..ZAF. meta is {page:1, pages:1, per_page:\"100\" (STRING), total:9} with NO sourceid/lastupdated keys, unlike the data endpoint meta. (curl http_code/time_total/bytes: 200 0.073523 3500). Saved by the adversarial verifier."
+}

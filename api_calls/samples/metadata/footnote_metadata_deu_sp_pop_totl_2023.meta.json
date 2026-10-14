@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/sources/2/footnote/DEU~SP.POP.TOTL~YR2023/metadata?format=json",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:12:52Z",
+  "notes": "Footnote metadata single key DEU~SP.POP.TOTL~YR2023."
+}

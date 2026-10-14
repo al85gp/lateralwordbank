@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA/indicator/SP.POP.TOTL?format=json&date=2018:2024&page=999",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:13:10Z",
+  "notes": "page=999 (only 1 page exists) -> HTTP 200 meta {page:999,pages:1,total:7} with an EMPTY rows list []. Not an error. Took 11.2s (cache MISS)."
+}

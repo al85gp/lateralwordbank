@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/indicator/SP.DYN.LE00.IN?format=json",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:11:17Z",
+  "notes": "Indicator metadata for life expectancy at birth, total (years). unit empty string."
+}

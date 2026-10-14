@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/indicator/SP.POP.TOTL;NY.GDP.MKTP.CD;NY.GDP.PCAP.CD;SP.DYN.LE00.IN?format=json",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:11:18Z",
+  "notes": "Semicolon-joined indicator codes on /indicator/{codes} are NOT supported for metadata: HTTP 200 with total 0, pages 0 and an empty list (no error). Same result with &source=2 and with /source/2/indicator/{codes}. Fixture for 'empty but successful' handling."
+}

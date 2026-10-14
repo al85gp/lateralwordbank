@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/MEX;ZAF/indicator/NY.GDP.PCAP.CD?source=2&format=json&date=2018:2024&per_page=1000",
+  "http_status": 200,
+  "content_type": "application/json",
+  "fetched_at_utc": "2026-10-14T01:59:29Z",
+  "notes": "CRITIC (completeness pass). Step B: the SAME URL WITHOUT footnote, sent 1 s after step A. WRONG BODY: byte-identical to step A (14 footnote keys although footnote was not requested). Served as plain 'application/json' (no charset) in 0.21 s with cf MISS, last-modified = date and max-age=86400, i.e. the HTTP cache headers look like a fresh render. Only the missing charset (and the sub-second latency) marks the inner-cache path."
+}

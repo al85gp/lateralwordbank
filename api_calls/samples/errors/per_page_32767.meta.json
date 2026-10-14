@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA/indicator/SP.POP.TOTL?format=json&date=2023:2024&per_page=32767",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:16:27Z",
+  "notes": "per_page=32767 accepted -> HTTP 200, meta.per_page 32767. 6.4s (cache MISS)."
+}

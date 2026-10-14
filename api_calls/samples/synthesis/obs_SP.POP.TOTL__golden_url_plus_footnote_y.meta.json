@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;CAN;DEU;GBR;IND;JPN;MEX;USA;ZAF/indicator/SP.POP.TOTL?source=2&format=json&date=2018:2024&per_page=1000&footnote=y",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:42:17Z",
+  "notes": "Synthesis live check. Golden SP.POP.TOTL URL + footnote=y. Fresh origin render (cf MISS, max-age=86400, last-modified = date, 15.4 s). Every row gains a 'footnote' key ('' for 61 rows, 'Break in series.' for DEU 2023 and 2022). Values identical to the golden fixture. Use as the fixture if the project adopts footnote=y."
+}

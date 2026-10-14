@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/sources/2/footnote/USA~SP.POP.TOTL~YR2020/metadata?format=json",
+  "http_status": 200,
+  "content_type": "text/xml",
+  "fetched_at_utc": "2026-10-14T01:12:21Z",
+  "notes": "No footnote exists for this key: HTTP 200 with Content-Type text/xml and an XML <wb:error> message id 160 'Data not found.' even though format=json was requested. The loader must check Content-Type/body, not just HTTP status."
+}

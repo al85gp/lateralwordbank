@@ -1,0 +1,15 @@
+HTTP/2 400 
+date: Wed, 14 Oct 2026 01:16:06 GMT
+content-type: text/html
+content-length: 1647
+set-cookie: api.worldbank.orgCORS=<redacted>; Path=/; SameSite=None; Secure
+set-cookie: api.worldbank.org=<redacted>; Path=/
+set-cookie: dataapi.cookie=<redacted>; Path=/
+set-cookie: __cf_bm=<redacted>; HttpOnly; SameSite=None; Secure; Path=/; Domain=worldbank.org; Expires=Wed, 14 Oct 2026 01:46:06 GMT
+set-cookie: _cfuvid=<redacted>; HttpOnly; SameSite=None; Secure; Path=/; Domain=worldbank.org
+cf-ray: a4a2bc78eea488cd-ORD
+cf-cache-status: BYPASS
+server: cloudflare
+x-powered-by: ASP.NET
+request-context: appId=cid-v1:da002513-bd8b-4441-9f30-737944134422
+

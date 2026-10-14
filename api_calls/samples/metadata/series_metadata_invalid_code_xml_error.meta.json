@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/sources/2/series/NOT.A.CODE/metadata?format=json",
+  "http_status": 200,
+  "content_type": "text/xml",
+  "fetched_at_utc": "2026-10-14T01:13:53Z",
+  "notes": "Invalid series code on the Metadata API: HTTP 200, text/xml, error id 160 (despite format=json). Docs say id 160 maps to HTTP 400 with a different message."
+}

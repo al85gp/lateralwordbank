@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/CAN;DEU/indicator/SP.DYN.LE00.IN?format=json&mrnev=2",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:32:02Z",
+  "notes": "VERIFIER fixture. Genuine mrnev=2 response (charset=utf-8, first request for this URL): envelope sourceid is JSON null and every row OMITS the 'unit' key entirely (not \"\", not null)."
+}

@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA/indicator/SP.POP.TOTL?format=json&date=2024",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:15:17Z",
+  "notes": "Join-key demo: indicator row country.id is ISO2 (BR) and countryiso3code is ISO3 (BRA) = country.id in country endpoint."
+}

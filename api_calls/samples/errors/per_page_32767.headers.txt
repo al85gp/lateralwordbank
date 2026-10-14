@@ -1,0 +1,18 @@
+HTTP/2 200 
+date: Wed, 14 Oct 2026 01:16:34 GMT
+content-type: application/json;charset=utf-8
+set-cookie: __cf_bm=<redacted>; HttpOnly; SameSite=None; Secure; Path=/; Domain=worldbank.org; Expires=Wed, 14 Oct 2026 01:46:34 GMT
+set-cookie: _cfuvid=<redacted>; HttpOnly; SameSite=None; Secure; Path=/; Domain=worldbank.org
+cf-ray: a4a2bd21dbd3da7a-ORD
+cf-cache-status: MISS
+access-control-allow-origin: *
+cache-control: public, max-age=86400
+expires: Thu, 15 Oct 2026 01:16:34 GMT
+last-modified: Wed, 14 Oct 2026 01:16:34 GMT
+server: cloudflare
+vary: accept-encoding
+access-control-allow-headers: X-Requested-With
+access-control-allow-methods: GET
+request-context: appId=cid-v1:da002513-bd8b-4441-9f30-737944134422
+x-powered-by: ASP.NET
+

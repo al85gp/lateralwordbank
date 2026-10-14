@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/all/indicator/SP.POP.TOTL?format=json&date=2018&per_page=400",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:16:15Z",
+  "notes": "country/all for SP.POP.TOTL 2018. Used to prove income-group aggregates use CURRENT membership: sum of current LIC/LMC/UMC members == WB aggregate exactly; HIC differs by 23,574,274 (economy in HIC group but not in the API country list, likely Taiwan, China). Also shows income-group aggregate rows have countryiso3code empty string."
+}

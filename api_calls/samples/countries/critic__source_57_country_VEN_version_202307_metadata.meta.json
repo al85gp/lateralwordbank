@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/sources/57/country/VEN/version/202307/metadata?format=json",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T02:02:46Z",
+  "notes": "CRITIC (completeness pass). Attempt to read the IncomeGroup of an archived version: /sources/57/country/VEN/version/202307/metadata. IncomeGroup 'Lower middle income' (the CURRENT FY27 value; OWID says VEN was unclassified 2021-2024). Byte-identical to the request without /version/ (see critic__source_57_country_VEN_metadata_no_version.json): the version segment is silently IGNORED on the Metadata API. No API route to historical income groups was found."
+}
