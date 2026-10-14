@@ -1,0 +1,62 @@
+version: 2
+
+sources:
+  - name: raw
+    description: Written only by dlt (wb_pipeline/source.py). Append-only; one set of rows per load.
+    schema: raw
+    tables:
+      - name: api_responses
+        description: One row per accepted API page per load, with the response body exactly as received.
+        columns:
+          - name: endpoint
+            description: "`country` or `indicator`."
+          - name: indicator_code
+            description: The requested indicator; null for the country call.
+          - name: request_url
+            description: The canonical URL of the page, the same for every load and attempt. Lineage join key.
+          - name: fetched_url
+            description: The URL actually sent; `request_url` plus `&cb=<load_id>-<attempt>` on a retry.
+          - name: attempt
+            description: Which attempt produced the accepted body; 1 unless a body was rejected.
+          - name: page
+            description: Page number.
+          - name: pages
+            description: Page count reported by the API.
+          - name: total
+            description: Record count across all pages reported by the API.
+          - name: source_last_updated
+            description: The API's `lastupdated` for the source of the indicator; null for the country call.
+          - name: http_status
+            description: HTTP status of the accepted response.
+          - name: fetched_at
+            description: When the accepted response arrived (UTC).
+          - name: body_sha256
+            description: SHA-256 of the response bytes.
+          - name: body
+            description: The response body as text, exactly as received.
+          - name: _dlt_load_id
+            description: The dlt load this row belongs to.
+      - name: run_scope
+        description: One row per load, the config snapshot that defines what the load was asked to fetch.
+        columns:
+          - name: countries
+            description: JSON list of ISO3 codes.
+          - name: indicators
+            description: JSON list of {code, unit, aggregation}.
+          - name: year_start
+            description: First year requested.
+          - name: year_end
+            description: Last year requested.
+          - name: per_page
+            description: Page size used.
+          - name: _dlt_load_id
+            description: The dlt load this row belongs to.
+      - name: _dlt_loads
+        description: Written by dlt. One row per load; `status = 0` marks a completed load.
+        columns:
+          - name: load_id
+            description: The load id.
+          - name: status
+            description: 0 when the load completed.
+          - name: inserted_at
+            description: When the load completed.

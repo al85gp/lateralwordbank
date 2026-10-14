@@ -1,0 +1,123 @@
+version: 2
+
+models:
+  - name: stg_wb__selected_load
+    description: >
+      The single load the rest of the project reads: the `load_id` var when set
+      (`python -m wb_pipeline rebuild --load-id`), else the latest completed load.
+    columns:
+      - name: load_id
+        description: The selected dlt load id.
+        data_tests: [not_null, unique]
+      - name: inserted_at
+        description: When dlt completed the load.
+        data_tests: [not_null]
+
+  - name: stg_wb__scope
+    description: The requested spine of the selected load, from raw.run_scope. One row per country x indicator x year.
+    data_tests:
+      - unique:
+          column_name: "concat_ws('|', country_iso3, indicator_code, year)"
+    columns:
+      - name: country_iso3
+        description: Requested country, ISO3.
+        data_tests: [not_null]
+      - name: indicator_code
+        description: Requested World Bank indicator code.
+        data_tests: [not_null]
+      - name: year
+        description: Requested year.
+        data_tests: [not_null]
+      - name: unit
+        description: Unit of the indicator, from config.
+        data_tests: [not_null]
+      - name: aggregation
+        description: How the indicator aggregates across countries, from config.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [sum, population_weighted_mean]
+      - name: load_id
+        description: The selected load.
+        data_tests: [not_null]
+
+  - name: stg_wb__countries
+    description: One row per country record in the selected load's country response, flattened.
+    columns:
+      - name: country_iso3
+        description: ISO3 code (the API's `id`), the country key everywhere.
+        data_tests: [not_null, unique]
+      - name: iso2_code
+        description: ISO2 code (the API's `iso2Code`).
+        data_tests: [not_null]
+      - name: country_name
+        description: Country name, trimmed.
+        data_tests: [not_null]
+      - name: region_code
+        description: World Bank region id.
+      - name: region_name
+        description: World Bank region name, trimmed (the API adds a trailing space to some).
+      - name: income_group_code
+        description: Current World Bank income classification id (HIC, UMC, LMC, LIC).
+      - name: income_group_name
+        description: Current World Bank income classification name.
+      - name: load_id
+        description: Lineage, the load.
+        data_tests: [not_null]
+      - name: request_url
+        description: Lineage, the canonical URL of the page.
+        data_tests: [not_null]
+      - name: body_sha256
+        description: Lineage, the SHA-256 of the page body.
+        data_tests: [not_null]
+      - name: record_index
+        description: Lineage, the record's position in the page's data array.
+        data_tests: [not_null]
+
+  - name: stg_wb__observations
+    description: >
+      One row per observation record in the selected load's indicator responses: ISO3 key,
+      integer year, DOUBLE value (null when the API sent null), nested objects flattened.
+    data_tests:
+      - unique:
+          column_name: "concat_ws('|', country_iso3, indicator_code, year)"
+    columns:
+      - name: country_iso3
+        description: ISO3 code (the API's `countryiso3code`).
+        data_tests: [not_null]
+      - name: indicator_code
+        description: Indicator code (the API's `indicator.id`).
+        data_tests: [not_null]
+      - name: year
+        description: Observation year (the API's string `date`, as an integer).
+        data_tests: [not_null]
+      - name: value
+        description: The value as published; null when the API returned null. Never coerced to 0.
+      - name: indicator_name
+        description: Indicator name (the API's `indicator.value`).
+        data_tests: [not_null]
+      - name: obs_status
+        description: The API's `obs_status`, null when empty.
+      - name: decimals
+        description: The API's `decimal`.
+      - name: source_last_updated
+        description: The API's `lastupdated` for the indicator's source.
+        data_tests: [not_null]
+      - name: source_id
+        description: The API's `sourceid`; always "2", World Development Indicators.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["2"]
+      - name: load_id
+        description: Lineage, the load.
+        data_tests: [not_null]
+      - name: request_url
+        description: Lineage, the canonical URL of the page.
+        data_tests: [not_null]
+      - name: body_sha256
+        description: Lineage, the SHA-256 of the page body.
+        data_tests: [not_null]
+      - name: record_index
+        description: Lineage, the record's position in the page's data array.
+        data_tests: [not_null]
