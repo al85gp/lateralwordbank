@@ -1,0 +1,31 @@
+# Every push, on every branch: build the test image and run the whole suite in it, exactly as
+# documented (`docker compose run --rm test`). The test service has no network, so CI never
+# calls the World Bank API; it replays the recorded responses in tests/fixtures/.
+name: CI
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # A newer push to the same branch cancels the run it supersedes.
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: docker compose run --rm test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - name: Build the test image
+        run: docker compose build test
+
+      - name: Run every test, with no network
+        run: docker compose run --rm test
