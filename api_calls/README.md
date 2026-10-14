@@ -367,6 +367,7 @@ Every body file under `samples/` is listed below. Every file has a `<name>.meta.
 | File | Request (abridged) | HTTP | What it shows | Suggested test use |
 |---|---|---|---|---|
 | `country_9_selected.json` | `/country/{9c}?format=json&per_page=50` | 200 | Our 9 target countries by ISO3, semicolon-separated, uppercase. | **Golden R2**: country dimension, 9 rows |
+| `country_9_selected_per_page_50_page_1.json` | `/country/{9c}?format=json&per_page=50&page=1` | 200 | The pipeline's canonical country URL (explicit `page=1`). Recorded 2026-10-14; byte-identical to `country_9_selected.json`. | Offline fixture for the pipeline's country call |
 | `country_9_selected_es.json` | `/es/country/BRA;DEU;ZAF?format=json` | 200 | Spanish language prefix /es/ - translated names/labels; ids unchanged. | Negative: never use a language prefix (labels and capitalCity change). Holds 3 countries despite the name |
 | `country_BRA_with_date_param.json` | `/country/BRA?format=json&date=2018` | 200 | Country endpoint with date=2018: tests whether a year can select a historical income classification. | Assert `/country` ignores `date` (no historical classification) |
 | `country_aggregates_WLD_HIC_EUU.json` | `/country/WLD;HIC;EUU?format=json` | 200 | Aggregates requested via country endpoint: shows the region/incomeLevel 'Aggregates' markers and empty-string fields. | Aggregate filter: `region.id == "NA"`; empty-string sentinels |

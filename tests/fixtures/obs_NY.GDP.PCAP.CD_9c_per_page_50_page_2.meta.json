@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;CAN;DEU;GBR;IND;JPN;MEX;USA;ZAF/indicator/NY.GDP.PCAP.CD?format=json&date=2018:2024&per_page=50&page=2",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T14:47:26Z",
+  "notes": "per_page=50 page 2 of 2 (last, partial page) -> 13 rows. Recorded as an offline paging fixture; validated (page, per_page, total 63, sourceid 2, indicator id, countries, years 2018-2024). sha256 9db9af9d."
+}

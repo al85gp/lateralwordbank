@@ -31,13 +31,27 @@ What you get:
 | `output/rpt_income_group_by_year.csv` | Indicators aggregated by income group and year |
 | `data/warehouse.duckdb` | The full warehouse, for ad-hoc queries |
 
-Replay an earlier load without calling the API:
+Each run logs its load id. List the completed loads, or replay one without calling the API:
+
+```bash
+docker compose run --rm pipeline loads
+```
 
 ```bash
 docker compose run --rm pipeline rebuild --load-id <load_id>
 ```
 
-> **TODO (scaffold):** confirm both commands work from a fresh clone; note how long a full run takes.
+Both commands were checked from a fresh clone. Building the image the first time takes about a minute. After that, a full run takes about 10 seconds: about 4 seconds for the nine API requests, then `dbt build` and the export. The test suite takes about 30 seconds.
+
+Without Docker, with Python 3.12:
+
+```bash
+python3.12 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt -c constraints.txt
+```
+
+```bash
+.venv/bin/python -m wb_pipeline run && .venv/bin/python -m pytest
+```
 
 ---
 
@@ -45,22 +59,22 @@ docker compose run --rm pipeline rebuild --load-id <load_id>
 
 | ID | Requirement | How it is handled | Where | Proven by |
 | --- | --- | --- | --- | --- |
-| R-ING-01, R-ING-02 | Retrieve country metadata and indicator observations | One country call, one call per indicator, all nine countries per request | `source.py` | `test_end_to_end` |
-| R-ING-03 | Handle paging | `per_page: 50`, so every indicator has two pages; a page loop reads `pages` from page 1 and fetches the rest; rows received are checked against `total` | `source.py` | `test_paging` |
-| R-ING-04 | Handle API failures | dlt retries 429, 5xx and timeouts with backoff (`.dlt/config.toml`); other 4xx fail fast; every HTTP 200 body is validated against its request, and a rejected body is refetched with a fresh cache-buster; a failed extract loads nothing | `source.py`, `.dlt/config.toml` | `test_retries`, `test_error_payload`, `test_response_validation`, `test_wrong_body_retry`, `test_failed_run_not_exported` |
-| R-ING-05, D-07 | Every output value traceable to its API response | `load_id`, `request_url`, `body_sha256` and `record_index` on every row; verbatim body, the URL actually sent and the attempt number in raw; lineage query below | `raw.api_responses`, every model | Lineage test, `test_end_to_end` |
+| R-ING-01, R-ING-02 | Retrieve country metadata and indicator observations | One country call, one call per indicator, all nine countries per request | `source.py` | `test_end_to_end`, `test_paging_*` |
+| R-ING-03 | Handle paging | `per_page: 50`, so every indicator has two pages; a page loop reads `pages` from page 1 and fetches the rest; rows received are checked against `total` | `source.py` | `test_paging_*` |
+| R-ING-04 | Handle API failures | dlt retries 429, 5xx and timeouts with backoff (`.dlt/config.toml`); other 4xx fail fast; every HTTP 200 body is validated against its request, and a rejected body is refetched with a fresh cache-buster; a failed extract loads nothing | `source.py`, `.dlt/config.toml` | `test_retries_*`, `test_error_payload_*`, `test_response_validation_*`, `test_wrong_body_retry_*`, `test_failed_run_not_exported` |
+| R-ING-05, D-07 | Every output value traceable to its API response | `load_id`, `request_url`, `body_sha256` and `record_index` on every row; the body exactly as received, the URL actually sent and the attempt number in raw; lineage query below | `raw.api_responses`, every model | `assert_lineage_resolves_to_raw`, `assert_raw_pages_intact`, `test_lineage_*` |
 | R-ING-06 | One documented command from a clean checkout | `docker compose run --rm --build pipeline` | `docker-compose.yml` | Fresh-clone run |
 | R-ING-07, D-08 | A rerun creates no duplicate analytical records | Raw is append-only; marts rebuild from the latest completed load (`_dlt_loads.status = 0`); `unique` on every grain | dbt marts | `test_idempotent_rerun` |
 | R-ING-08 | No cloud resources or accounts | Public API, open-source dlt (no paid tier), a local DuckDB file, local Docker | Whole repo | Nothing to sign up for |
-| R-MOD-01 | Raw separate from cleaned and analytics-ready | `raw` written only by dlt; `staging`, `marts`, `reporting` only by dbt | DuckDB schemas | `rebuild` restores everything from raw alone |
+| R-MOD-01 | Raw separate from cleaned and analytics-ready | `raw` written only by dlt; `staging`, `marts`, `reporting` only by dbt | DuckDB schemas | `test_correction_replay_*`: `rebuild` restores everything from raw alone |
 | R-MOD-02 | Grain, keys and relationships documented | Data model section; a description on every dbt model and column | `dbt/models/*.yml` | `unique`, `not_null`, `relationships` tests |
 | R-MOD-03 | Standardized for analysts | ISO3 key, integer year, flattened objects, snake_case, typed values | Staging models | `accepted_values` and range tests |
 | R-MOD-04, D-09 | Add a country or indicator by configuration | One list entry in `config/pipeline.yml` | `config.py` | `test_config_validation`, spine-completeness test |
-| D-01, D-02 | Missing data is an outcome, not zero | Spine-based fact with `value_status` | `fct_indicator_year` | `accepted_values`, spine-completeness test |
-| R-ANL-01 – R-ANL-04 | The four analytics questions | One dbt view each, exported to CSV | `dbt/models/reporting/`, `output/` | `test_end_to_end` |
+| D-01, D-02 | Missing data is an outcome, not zero | Spine-based fact with `value_status` | `fct_indicator_year` | `accepted_values`, `assert_spine_complete` |
+| R-ANL-01 – R-ANL-04 | The four analytics questions | One dbt view each, exported to CSV | `dbt/models/reporting/`, `output/` | `test_end_to_end`, `assert_yoy_change_matches_status`, `assert_income_groups_reconcile` |
 | R-ANL-05 | *Optional* extra view or dashboard | Not built; CSV-only output (see Trade-offs) | — | — |
 | R-DQ-01 | Correctness and safe reprocessing | dbt tests on every run, pytest suite | `dbt/tests/`, `tests/` | Data quality and tests section |
-| R-DQ-02, D-06 | Related indicators consistent | GDP per capita within 1% of GDP ÷ population | Singular dbt test (warn) | Warning rows in the run output |
+| R-DQ-02, D-06 | Related indicators consistent | GDP per capita within 1% of GDP ÷ population | Singular dbt test (warn) | `test_consistency_warning_does_not_block_export`; warning rows in the run output |
 | R-DQ-03, D-10 | Tests never call the live API | `requests-mock` with recorded fixtures; the `test` service has no network | `tests/`, `docker-compose.yml` | Any live call fails the suite |
 | R-PRD-01 – R-PRD-05 | Production design note | Scheduling, late data, monitoring, backfills, cloud mapping | Production design note section | — |
 | R-DEL-01 | Runs locally by following the README | Docker Compose, nothing else on the host | Quick start | Fresh-clone run |
@@ -81,7 +95,7 @@ World Bank API v2              config/pipeline.yml
                         ▼
    raw  (DuckDB dataset)        raw.api_responses, raw.run_scope, raw._dlt_loads; append-only
                         ▼
-   staging  (dbt views)         latest completed load only; parse, flatten, cast
+   staging  (dbt views)         one completed load (latest, or --load-id); parse, flatten, cast
                         ▼
    marts  (dbt tables)          dim_country, dim_indicator, fct_indicator_year
                         ▼
@@ -101,33 +115,39 @@ The raw layer is the only state that matters: drop every schema below it and `re
 ```text
 lateralwordbank/
 ├── README.md
-├── Dockerfile                # python:3.12-slim, pinned requirements
+├── requirements.md           # the brief's requirements with IDs
+├── Dockerfile                # python:3.12-slim; stages runtime and test; runs as the host user
 ├── docker-compose.yml        # services: pipeline, test (network_mode: none); mounts data/ and output/
-├── requirements.txt          # dlt[duckdb], dbt-core, dbt-duckdb, pyyaml (pinned)
-├── requirements-dev.txt      # pytest, requests-mock
+├── requirements.txt          # dlt[duckdb], duckdb, dbt-core, dbt-duckdb, pyyaml (pinned)
+├── requirements-dev.txt      # pytest, requests-mock (pinned)
+├── constraints.txt           # every transitive version, pinned
+├── pytest.ini
 ├── config/
 │   └── pipeline.yml          # countries, indicators, years, aggregation
 ├── .dlt/
-│   └── config.toml           # HTTP timeout, retry attempts, backoff
+│   └── config.toml           # HTTP timeout, retry attempts, backoff; telemetry off
 ├── wb_pipeline/
-│   ├── __main__.py           # run | rebuild
+│   ├── __main__.py           # run | rebuild [--load-id] | loads
 │   ├── config.py             # load + validate pipeline.yml
 │   ├── source.py             # dlt source: page loop, resources, response validation, cache-buster retries
-│   └── export.py             # reporting views to a temp folder, swapped into output/ on green
+│   ├── pipeline.py           # extract and load, dbt build, export, in order; rebuild; list loads
+│   └── export.py             # reporting views to output/.staging, moved into output/ on green
 ├── dbt/
-│   ├── dbt_project.yml
-│   ├── profiles.yml          # duckdb at /app/data/warehouse.duckdb
+│   ├── dbt_project.yml       # schemas staging, marts, reporting; failing test rows kept in dq
+│   ├── profiles.yml          # duckdb at $WAREHOUSE_PATH
 │   ├── macros/generate_schema_name.sql
 │   ├── models/
-│   │   ├── staging/          # stg_wb__scope, stg_wb__countries, stg_wb__observations
+│   │   ├── staging/          # stg_wb__selected_load, stg_wb__scope, stg_wb__countries, stg_wb__observations
 │   │   ├── marts/            # dim_country, dim_indicator, fct_indicator_year
 │   │   └── reporting/        # the four rpt_* views
 │   └── tests/                # singular SQL tests
 ├── tests/
-│   ├── fixtures/             # recorded API pages (JSON)
+│   ├── fixtures/             # recorded API pages for every canonical URL, with .meta.json sidecars
+│   ├── conftest.py           # fake API serving the fixtures; per-test workspace
 │   └── test_*.py
+├── api_calls/                # how the API behaves: probes, findings, recorded samples
 ├── output/                   # committed sample CSVs
-└── data/                     # gitignored: warehouse.duckdb
+└── data/                     # gitignored: warehouse.duckdb, dlt's working folder
 ```
 
 ---
@@ -156,7 +176,7 @@ indicators:
 
 Then rerun the pipeline. The expected spine, the completeness test and every report widen automatically.
 
-`config.py` rejects invalid ISO3 codes, duplicates, `start > end`, unknown aggregations, `validation_attempts` below 1, and `population_weighted_mean` when `SP.POP.TOTL` is not in scope.
+`config.py` rejects invalid ISO3 codes, lower-case indicator codes, duplicates, `start > end`, unknown aggregations, `validation_attempts` below 1, `per_page` above 32767 (the API's limit), unknown keys (a typo fails loudly), and `population_weighted_mean` when `SP.POP.TOTL` is not in scope.
 
 HTTP behavior lives in `.dlt/config.toml`:
 
@@ -166,7 +186,10 @@ request_timeout = 90          # an uncached response took 45 s (api_calls/01)
 request_max_attempts = 5
 request_backoff_factor = 2
 request_max_retry_delay = 60
+dlthub_telemetry = false      # no calls to anything but the World Bank API
 ```
+
+dbt's anonymous usage stats are off too (`dbt_project.yml`), so the API is the only network destination.
 
 ---
 
@@ -176,19 +199,21 @@ request_max_retry_delay = 60
 
 | Call | Path and params | Pages |
 | --- | --- | --- |
-| Country metadata | `/country/BRA;CAN;…;ZAF?format=json&per_page=50` | 1 |
+| Country metadata | `/country/BRA;CAN;…;ZAF?format=json&per_page=50&page=<n>` | 1 |
 | One per indicator | `/country/BRA;CAN;…;ZAF/indicator/<code>?format=json&date=2018:2024&per_page=50&page=<n>` | 2 |
 
-That is nine requests per run. These are the canonical URLs: a first attempt always sends exactly this URL, and only a retry of a rejected HTTP 200 body adds `&cb=<load_id>-<attempt>` (see Failure handling).
+That is nine requests per run. Both calls go through the same page loop, so the country call would page too with more than 50 countries. These are the canonical URLs: a first attempt always sends exactly this URL, and only a retry of a rejected HTTP 200 body adds `&cb=<load_id>-<attempt>` (see Failure handling).
 
 ### dlt source
 
 `wb_pipeline/source.py` defines one `@dlt.source` with two resources, both `write_disposition: append`, loaded into dataset `raw`:
 
 - `run_scope` — one row per load: the config snapshot of countries, indicators with unit and aggregation, and years.
-- `api_responses` — one row per accepted page: `endpoint`, `indicator_code`, `request_url` (canonical), `fetched_url` (the URL actually sent), `attempt`, `page`, `pages`, `total`, `source_last_updated`, `http_status`, `fetched_at`, `body_sha256`, and `body` declared as a `json` column so dlt stores it verbatim instead of unnesting it into child tables.
+- `api_responses` — one row per accepted page: `endpoint`, `indicator_code`, `request_url` (canonical), `fetched_url` (the URL actually sent), `attempt`, `page`, `pages`, `total`, `source_last_updated`, `http_status`, `fetched_at`, `body_sha256`, and `body`. The body is a `text` column holding the response exactly as received. A `json` column would also stop dlt from unnesting it into child tables, but it re-serializes the JSON, so the stored bytes would no longer match `body_sha256`. As text, `sha256(body) = body_sha256` holds for every page, and dbt tests that it does. DuckDB's JSON functions read the text column directly.
 
-HTTP calls go through dlt's `requests` helper, so the timeout and retry settings in `.dlt/config.toml` apply to every request.
+Every column has an explicit type, so dlt never guesses one from the first value it sees. The resource reads its `load_id` from dlt's load package state and uses it in the cache-buster token.
+
+HTTP calls go through dlt's `requests` client, built from the `[runtime]` settings in `.dlt/config.toml`, so the timeout and retry settings apply to every request.
 
 ### Paging
 
@@ -229,16 +254,23 @@ How a failure plays out:
 
 - An exception during extract stops `pipeline.run()` before load, so nothing is written.
 - A failure inside dlt's load step can leave rows behind, but without a completed entry in `_dlt_loads`; staging reads completed loads only (`status = 0`).
-- Each run first drops any pending load packages a crashed run left behind.
-- The process exits non-zero with the error and dlt's trace, and `output/` keeps the last good CSVs.
+- Each run first discards any load package a crashed run left behind (`pipeline.abort_packages()`), so it can never be loaded later.
+- The process exits non-zero with the innermost error, and `output/` keeps the last good CSVs.
 
-> **TODO (extract and load):** record any API behavior the live run revealed (error format, empty pages, null values, response time) and how the code handles it.
+What the live runs showed:
+
+- Every one of the nine requests was accepted on the first attempt. The extract took about 4 seconds, all pages arrived in under 0.2 seconds each, and no cache-buster was needed.
+- All 252 requested values came back reported. There were no null values and no missing rows, so `rpt_missing_or_incomplete` has only a header. The `null_in_source` and `not_returned` paths are exercised by tests instead.
+- The source's `lastupdated` was 2026-10-08 on every indicator page.
+- The country response has no `sourceid` or `lastupdated`, and its `per_page` is a string (`"50"`). Validation casts with `int()` and checks `sourceid` on indicator calls only.
+- Some region names end with a space (`"Latin America & Caribbean "`). Staging trims them.
+- Values arrive as JSON ints for some countries and floats for others within one indicator (USA GDP is an int). Staging casts all of them to DOUBLE.
 
 ### Raw tables
 
 | Table | Grain and key | Notes |
 | --- | --- | --- |
-| `raw.api_responses` | One accepted page per load; (`_dlt_load_id`, `request_url`) | Verbatim `body`, `body_sha256`, request metadata, `fetched_url` and `attempt`; rejected attempts are not stored |
+| `raw.api_responses` | One accepted page per load; (`_dlt_load_id`, `request_url`) | `body` as text exactly as received, `body_sha256`, request metadata, `fetched_url` and `attempt`; rejected attempts are not stored |
 | `raw.run_scope` | One row per load; `_dlt_load_id` | Config snapshot; defines what was expected |
 | `raw._dlt_loads` | One row per load; `load_id` | Written by dlt; `status = 0` marks a completed load |
 
@@ -250,6 +282,7 @@ How a failure plays out:
 4. `fetched_url` is the URL actually sent for the accepted body. It equals `request_url` when `attempt = 1`. On a retry it is `request_url` plus `&cb=<load_id>-<attempt>`, so raw shows exactly which request produced the stored bytes.
 5. Both URLs are complete. Pasting either into a browser runs the same query against the live API, because the API ignores the `cb` token.
 6. A `not_returned` row has no lineage by definition; `raw.run_scope` shows it was requested.
+7. Two dbt tests check this on every run. `assert_lineage_resolves_to_raw` re-reads each reported value from its raw record and compares country, indicator, year and value. `assert_raw_pages_intact` checks every page's SHA-256 and that its `fetched_url` matches its `attempt`.
 
 Lineage query for any value:
 
@@ -265,7 +298,7 @@ where f.country_iso3 = 'BRA' and f.indicator_code = 'SP.POP.TOTL' and f.year = 2
 
 ### Idempotency
 
-Raw is append-only: a rerun adds one load and about nine page rows. dbt rebuilds the marts as tables from the latest completed load, with `unique` tests on every grain, so unchanged source data produces identical facts. An unchanged `body_sha256` shows the source did not move. A run that needed cache-buster retries produces the same facts too: marts and CSVs carry the canonical `request_url`, never `fetched_url`. `test_idempotent_rerun` runs the pipeline twice and diffs the fact table.
+Raw is append-only: a rerun adds one load and about nine page rows. dbt rebuilds the marts as tables from the latest completed load, with `unique` tests on every grain, so unchanged source data produces identical facts. An unchanged `body_sha256` shows the source did not move. A run that needed cache-buster retries produces the same facts too: marts and CSVs carry the canonical `request_url`, never `fetched_url`. `test_idempotent_rerun` runs the pipeline twice and compares the fact table and the CSV bytes.
 
 ---
 
@@ -275,7 +308,8 @@ The fact table's grain is the full requested spine, country × indicator × year
 
 | Model | Layer | Materialized | Grain | Business key | Relationships |
 | --- | --- | --- | --- | --- | --- |
-| `stg_wb__scope` | staging | view | Requested country × indicator × year | (`country_iso3`, `indicator_code`, `year`) | Built from `raw.run_scope` of the selected load |
+| `stg_wb__selected_load` | staging | view | One row: the load to build from | `load_id` | The `load_id` var, else the latest completed load; every staging model joins to it |
+| `stg_wb__scope` | staging | view | Requested country × indicator × year | (`country_iso3`, `indicator_code`, `year`) | Built from `raw.run_scope` of the selected load; carries each indicator's `unit` and `aggregation` |
 | `stg_wb__countries` | staging | view | Country in the selected load | `country_iso3` | Parsed from the country responses |
 | `stg_wb__observations` | staging | view | API record | (`country_iso3`, `indicator_code`, `year`) | Parsed from indicator responses with `record_index` |
 | `dim_country` | marts | table | Country | `country_iso3` | One to many with the fact |
@@ -294,9 +328,12 @@ The fact table's grain is the full requested spine, country × indicator × year
 `dim_country`: `country_iso3`, `iso2_code`, `country_name`, `region_name`, `income_group_code`, `income_group_name`.
 `dim_indicator`: `indicator_code`, `indicator_name`, `unit`, `aggregation`, `source_id`.
 
-**Standardization:** one country key (ISO3) everywhere, because the API mixes ISO2 `country.id` and `countryiso3code`; `year` as an integer instead of the string `date`; nested `{id, value}` objects flattened; snake_case names throughout.
+**Standardization:** one country key (ISO3) everywhere, because the API mixes ISO2 `country.id` and `countryiso3code`; `year` as an integer instead of the string `date`; every value as DOUBLE; nested `{id, value}` objects flattened; names trimmed; snake_case throughout.
 
-> **TODO (staging and marts):** confirm the column list against the real payload and note anything the API returned that the model drops.
+The column lists above were checked against the real payload. The model drops these API fields; all of them stay in raw:
+
+- Country call: `adminregion`, `lendingType`, `capitalCity`, `longitude`, `latitude`, and the region's and income level's `iso2code` aliases.
+- Observations: `country.id` and `country.value`, which the ISO2 code and `dim_country` already cover, and `unit`, which is empty for all four indicators (the unit comes from config).
 
 ---
 
@@ -306,15 +343,20 @@ The fact table's grain is the full requested spine, country × indicator × year
 | --- | --- | --- | --- |
 | Which combinations are missing or incomplete? | `rpt_missing_or_incomplete` | Country × indicator × year not `reported` | Includes `value_status` plus the series' `years_reported` and `years_expected` |
 | Year-over-year change | `rpt_yoy_change` | Country × indicator × year | Prior is exactly `year - 1`. When the current or prior value is missing, `abs_change` and `pct_change` are both null. When the prior value is 0, `abs_change` is still computed and only `pct_change` is null (D-03). `change_status` says which case applies: `ok`, `first_year_in_scope`, `no_current_value`, `no_prior_value`, `prior_is_zero` |
-| Countries at the latest year | `rpt_latest_comparison` | Indicator × country | Per D-04, `latest_year` is each country's own latest year with a reported (non-null) value, so it can differ between countries. Shows that year's `value` and its `rank` among countries for the indicator. `years_behind` is the most recent `latest_year` of any country minus this country's, so a comparison across different years is visible. A country with no reported value in scope has null `latest_year`, `value` and `rank` |
-| Income groups by year | `rpt_income_group_by_year` | Income group × indicator × year | `sum` for population and GDP; `population_weighted_mean` for GDP per capita and life expectancy; `countries_in_group`, `countries_reporting` and `is_complete` show coverage |
+| Countries at the latest year | `rpt_latest_comparison` | Indicator × country | Per D-04, `latest_year` is each country's own latest year with a reported (non-null) value, so it can differ between countries. Shows that year's `value` and its `value_rank` among countries for the indicator (1 = highest; ties share a rank). `years_behind` is the most recent `latest_year` of any country minus this country's, so a comparison across different years is visible. A country with no reported value in scope has null `latest_year`, `value` and `value_rank` |
+| Income groups by year | `rpt_income_group_by_year` | Income group × indicator × year | `sum` for population and GDP; `population_weighted_mean` for GDP per capita and life expectancy, weighted by the same country-year's population; `countries_in_group`, `countries_reporting` and `is_complete` show coverage |
 
-CSVs are ordered by their keys and carry `request_url`, `body_sha256` and `record_index` as lineage (not `load_id`), so a rerun on unchanged data produces a zero-line git diff.
+`pct_change` is in percent of the prior value. CSVs are ordered by their keys. The three row-level reports carry `request_url`, `body_sha256` and `record_index` as lineage; the income-group report is an aggregate and has none. None of them carry `load_id` or `fetched_url`, so a rerun on unchanged data produces a zero-line git diff.
 
 - 2018 has no prior year in scope, so its YoY status is `first_year_in_scope`. Set `years.start: 2017` to change that.
 - India is the only lower-middle-income country in scope, so that group is a single country.
 
-> **TODO (reporting):** add a two-line summary of what each CSV shows on the real data.
+What the committed CSVs show (live run, source updated 2026-10-08):
+
+- **`rpt_missing_or_incomplete`:** a header only. All 252 requested values were reported.
+- **`rpt_yoy_change`:** 216 `ok` rows and 36 `first_year_in_scope` rows (2018). The largest falls are Brazil's GDP and GDP per capita in 2020 (about −21%). The largest rise is South Africa's GDP in 2021 (+24%).
+- **`rpt_latest_comparison`:** every country's latest year is 2024, so `years_behind` is 0 everywhere. India ranks first for population, the USA for GDP and GDP per capita, and Japan for life expectancy.
+- **`rpt_income_group_by_year`:** 84 rows (4 indicators × 3 groups × 7 years), all complete. In 2024, GDP per capita, weighted by population, was about $67,000 for high income, $10,900 for upper middle income and $2,600 for lower middle income.
 
 ---
 
@@ -322,43 +364,53 @@ CSVs are ordered by their keys and carry `request_url`, `body_sha256` and `recor
 
 ### dbt tests (every run)
 
-A failing `error` test stops the run before export, so `output/` keeps the last good CSVs. A `warn` test prints its rows and the run continues.
+`dbt build` runs 77 tests alongside the 11 models. A failing `error` test stops the run before export, so `output/` keeps the last good CSVs. A `warn` test's failing rows are printed in the run log, and the run continues. Every test stores its failing rows in the `dq` schema, so a failure can be inspected afterwards.
 
 | Check | Implemented as | Severity |
 | --- | --- | --- |
-| Keys unique and not null on every model | `unique`, `not_null` | error |
+| Keys unique and not null on every model, including the reporting views | `unique` (on the full grain), `not_null` | error |
+| Exactly one load selected | `unique`, `not_null` on `stg_wb__selected_load` | error |
 | Fact rows point at existing dims | `relationships` | error |
-| `value_status` is one of three values | `accepted_values` | error |
-| Spine complete: fact rows = countries × indicators × years in the load's scope | singular SQL | error |
-| No duplicate API records per key within a load | singular SQL | error |
-| Every non-null value has `request_url` and `body_sha256` | singular SQL | error |
+| `value_status`, `aggregation`, `change_status`, `source_id` hold only known values | `accepted_values` | error |
+| Spine complete: fact rows = countries × indicators × years in the load's scope, counted from `raw.run_scope` | `assert_spine_complete` | error |
+| No duplicate API records per key within a load | `assert_no_duplicate_api_records` | error |
+| Every value from the API has full lineage; `value` is null unless `reported` | `assert_reported_values_have_lineage` | error |
+| Lineage resolves: the raw record at `record_index` has the same country, indicator, year and value | `assert_lineage_resolves_to_raw` | error |
+| Raw pages intact: `sha256(body) = body_sha256`; `fetched_url` matches `attempt` | `assert_raw_pages_intact` | error |
 | Every country has an income group | `not_null` | error |
-| Population and GDP above 0; life expectancy 20–100 years | singular SQL | error |
-| GDP per capita within 1% of GDP ÷ population | singular SQL | warn |
-| GDP and population present but GDP per capita missing | singular SQL | warn |
-| Population changes more than 10% year over year | singular SQL | warn |
+| Population and GDP above 0; life expectancy 20–100 years | `assert_values_in_plausible_range` | error |
+| Year-over-year numbers agree with `change_status` (no number where a value is missing; no percentage on a zero prior) | `assert_yoy_change_matches_status` | error |
+| Income groups add up to the country totals for `sum` indicators, and each country is in exactly one group | `assert_income_groups_reconcile` | error |
+| GDP per capita within 1% of GDP ÷ population | `assert_gdp_per_capita_consistent` | warn |
+| GDP and population present but GDP per capita missing | `assert_gdp_per_capita_present` | warn |
+| Population changes more than 10% year over year | `assert_population_yoy_within_10pct` | warn |
 
-The consistency checks warn rather than fail: the source revises indicators on different dates, so a mismatch is usually revision timing, not a pipeline bug.
+The consistency checks warn rather than fail: the source revises indicators on different dates, so a mismatch is usually revision timing, not a pipeline bug. On the real data, GDP per capita matches GDP ÷ population to about 1e-15.
 
 ### pytest (no network)
 
 `requests-mock` intercepts every HTTP call dlt makes and serves JSON from `tests/fixtures/`, recorded once from the live API. The fixtures are the exact canonical URLs a real run sends: the country call plus pages 1 and 2 at `per_page=50` for all four indicators, copied from `api_calls/samples/pagination/`. Joined, the two pages of each indicator match the single-page golden recordings in `api_calls/samples/observations/` value for value. Integration tests run the dlt pipeline into a temporary DuckDB file and call `dbt build` through dbt's Python runner, with dlt's retry delays set to zero. The `test` service runs with `network_mode: none`, so any accidental live call fails the suite.
 
-| Test | Proves |
-| --- | --- |
-| `test_paging` | The recorded two-page responses yield all 63 rows per indicator; a count that disagrees with `total` fails; a page 2 whose `lastupdated` differs from page 1 restarts the indicator |
-| `test_retries` | 503, 503, 200 succeeds on the third attempt; five 503s fail the run; a timeout is retried |
-| `test_error_payload` | HTTP 200 with a `message` body is never loaded as empty data; ids 105 and 199 are retried with a cache-buster; id 120 fails at once |
-| `test_response_validation` | Each check rejects a body: wrong `indicator.id`, a country or year outside the request, wrong `page` or `per_page`, `sourceid` other than `"2"`, a row count that doesn't fit `total` |
-| `test_wrong_body_retry` | Page 1 of `NY.GDP.MKTP.CD` is first served the recorded `SP.POP.TOTL` page 1, a real response to a different query, as the cache does. The retry carries `&cb=<load_id>-2`, gets the right body, and loads it with `attempt = 2` and the canonical `request_url`. Wrong bodies on every attempt fail the run with nothing loaded |
-| `test_config_validation` | Bad ISO3 codes, duplicates, `validation_attempts` below 1 and a weighted mean without population are rejected |
-| `test_idempotent_rerun` | Two runs on the same fixtures: identical fact table, still 252 rows |
-| `test_correction` | A changed value in run two shows in the fact; raw keeps both bodies |
-| `test_failed_run_not_exported` | A run that fails partway adds no completed load and leaves `output/` untouched |
-| `test_bad_data_blocks_export` | A seeded duplicate fails `dbt build`; `output/` stays untouched |
-| `test_end_to_end` | Fixture run, `dbt build` passes, four CSVs written with the expected columns |
+57 tests in four files. Names below are prefixes; each covers several cases.
 
-> **TODO (pytest):** update this table if tests are added, renamed or dropped.
+| Test | File | Proves |
+| --- | --- | --- |
+| `test_paging_*` | `test_source.py` | The recorded responses are fetched from exactly the nine canonical URLs and yield 9 countries and 63 rows per indicator. A page with fewer rows than `total` implies fails after its attempts. A page 2 from another release (different `lastupdated`) restarts the indicator from page 1 with cache-busters. A zero-match response is an empty result, not an error |
+| `test_retries_*` | `test_source.py` | 503, 503, 200 succeeds and resends the same URL; five 503s fail the run; a timeout is retried; a 400 is not retried |
+| `test_error_payload_*` | `test_source.py` | HTTP 200 with id 120 fails at once with one request; id 105 is retried with `&cb=<load_id>-2` and recorded as attempt 2; id 199 on every attempt fails after 4 attempts |
+| `test_response_validation_*` | `test_source.py` | Each check rejects a body: wrong `indicator.id`, a country or year outside the request, a non-integer date, wrong `page` or `per_page`, `sourceid` other than `"2"`, missing metadata, a short page, a bad shape, a non-JSON content type, a country record not requested. The recorded page passes, and its body is kept byte for byte |
+| `test_wrong_body_retry_*` | `test_wrong_body_retry.py` | Page 1 of `NY.GDP.MKTP.CD` is first served the recorded `SP.POP.TOTL` page 1, a real response to a different query, as the cache does. The retry carries `&cb=<load_id>-2`, gets the right body, and loads it with `attempt = 2` and the canonical `request_url`. Wrong bodies on every attempt fail the run with nothing loaded. A clean run sends no cache-busters |
+| `test_config_validation_*` | `test_config_validation.py` | The shipped config parses; adding a country or indicator is one list entry; 15 kinds of bad config are rejected with a clear message |
+| `test_end_to_end` | `test_pipeline.py` | Extract, `dbt build`, export: 252 reported facts, four CSVs with the expected headers and row counts, no leftover staging folder |
+| `test_lineage_*` | `test_pipeline.py` | For all 252 facts, the raw body's SHA-256 matches and the record at `record_index` has the same country, indicator, year and value |
+| `test_idempotent_rerun` | `test_pipeline.py` | Two runs: raw has two loads, the fact table is identical with 252 rows, and the CSVs are byte-identical |
+| `test_correction_*` | `test_pipeline.py` | A corrected value in run two shows in the fact, and raw keeps both bodies. `rebuild --load-id` of run one restores its facts and CSVs exactly, with no API calls |
+| `test_failed_run_not_exported` | `test_pipeline.py` | A run that fails on its last page adds no completed load and leaves `output/` byte-identical |
+| `test_bad_data_blocks_export` | `test_pipeline.py` | A duplicate page seeded into raw fails `assert_no_duplicate_api_records`; `output/` stays byte-identical |
+| `test_consistency_warning_does_not_block_export` | `test_pipeline.py` | GDP per capita 5% off for one country-year logs the `warn` test with its row, and the CSVs are still written |
+| `test_rebuild_rejects_an_unknown_load` | `test_pipeline.py` | `rebuild` with a load id that is not a completed load fails with a clear message |
+
+The suite can fail: with the `indicator.id` check in `source.py` disabled on purpose, three tests fail, including both `test_wrong_body_retry` tests that expect a wrong body to be rejected.
 
 ---
 
@@ -380,8 +432,11 @@ The consistency checks warn rather than fail: the source revises indicators on d
 | Latest year per country (D-04) | The latest year every country reports | The requirements rule; `years_behind` shows when countries are compared across different years |
 | YoY on a zero prior keeps `abs_change` (D-03) | Null both changes | The requirements rule; the absolute change is well defined, only the percentage is not |
 | 90 s HTTP timeout | 30 s | An uncached response from the API took 45 s |
-
-> **TODO (every step):** add a row each time you choose between two approaches.
+| Raw `body` as text | dlt's `json` column type | `json` re-serializes the body, so its bytes would no longer match `body_sha256`; text keeps them exact, and DuckDB's JSON functions still read it |
+| One `stg_wb__selected_load` model that every staging model joins to | Repeat the "latest completed load" filter in each model | One place decides which load is built; `rebuild --load-id` only changes a dbt var |
+| A cache-busted retry counter per canonical URL for the whole run | A counter per page fetch | A restart from page 1 also gets fresh tokens, and the attempt budget still bounds the total requests |
+| Run the container as the host user | Run as root | Files in `data/` and `output/` belong to the person who ran it, on Linux too |
+| Pinned top-level versions plus `constraints.txt` | Top-level pins only | The same transitive versions in every build |
 
 ---
 
@@ -395,9 +450,10 @@ The consistency checks warn rather than fail: the source revises indicators on d
 - "Unchanged source data" means byte-identical response bodies, by `body_sha256`.
 - Analytics reflect the latest completed dlt load; raw holds the history.
 - Values stay in current US dollars as published: no deflation, no currency conversion.
-- Income-group aggregates use reporting countries only; coverage columns show the gaps.
-
-> **TODO (every step):** add any assumption made while building.
+- Income-group aggregates use reporting countries only; coverage columns show the gaps. A weighted mean counts a country only when both its value and its population are reported.
+- `pct_change` is a percentage of the prior value's magnitude, `(value - prior) / |prior| × 100`.
+- Indicator codes are upper case, as the API returns them for World Development Indicators. The validation compares `indicator.id` exactly.
+- Leading and trailing spaces in names are not meaningful, so staging trims them.
 
 ---
 
@@ -405,7 +461,7 @@ The consistency checks warn rather than fail: the source revises indicators on d
 
 | Decision | Gained | Given up |
 | --- | --- | --- |
-| Open-source dlt for ingestion | Retries with backoff, atomic load packages, a load log in `_dlt_loads`, a verbatim `json` column | One more abstraction to explain; paging and response validation are our own code rather than a dlt paginator; a failed load step can leave rows that staging must filter out |
+| Open-source dlt for ingestion | Retries with backoff, atomic load packages, a load log in `_dlt_loads`, typed raw tables, a load id to put in cache-buster tokens | One more abstraction to explain; paging and response validation are our own code rather than a dlt paginator; a failed load step can leave rows that staging must filter out |
 | Validation with cache-buster retries | Wrong cached bodies are caught and usually recovered | Not guaranteed, because an inner cache sometimes ignores the token, so a run can still fail after `validation_attempts`; raw needs both `request_url` and `fetched_url` |
 | `per_page: 50` | Paging is exercised on every run | Nine requests instead of five |
 | dbt-core, no packages | `ref()` ordering, built-in tests, generated docs | `dbt build` is not transactional; a failing test leaves rebuilt tables, so CSVs are swapped in only on green |
@@ -415,6 +471,8 @@ The consistency checks warn rather than fail: the source revises indicators on d
 | Raw stores full bodies | Exact traceability and replay | Raw grows each run; production needs a retention rule |
 | Full re-pull every run | Simple and always consistent | Redundant requests, harmless at this volume |
 | Consistency checks warn | Reports ship despite revision timing | A real error needs someone to read the warning |
+| Failing test rows stored in `dq` | A failure can be inspected after the run; warnings print their rows | 77 small tables in the `dq` schema, rebuilt every run |
+| dbt runs in-process through `dbtRunner` | One process and one exit code for the whole run; tests call it directly | dlt and dbt share a Python environment, so their dependency versions must agree (pinned in `constraints.txt`) |
 
 ---
 
@@ -463,20 +521,34 @@ The consistency checks warn rather than fail: the source revises indicators on d
 | Step | What AI drafted | What I changed | How I verified |
 | --- | --- | --- | --- |
 | Planning | Architecture, data model, requirement mapping and README outline (Claude), within the stack I chose | Cut the orchestrator and the report UI; chose CSV-only output | Checked every requirement in the brief against the coverage table |
-| Scaffold | TODO | | |
-| Extract and load | TODO | | |
-| Staging and marts | TODO | | |
-| pytest | TODO | | |
-| Reporting | TODO | | |
-| README | TODO | | |
+| Scaffold | Dockerfile (runtime and test stages, runs as the host user), `docker-compose.yml`, pinned requirements and `constraints.txt`, `config/pipeline.yml`, `.dlt/config.toml`, the dbt project skeleton (Claude) | | |
+| Extract and load | `config.py`, `source.py` (page loop, response validation, cache-buster retries), `pipeline.py`, `__main__.py`; recorded the canonical country URL and the 50-per-page pages as fixtures (Claude) | | |
+| Staging and marts | The staging and marts models, a description on every model and column, schema tests and singular tests (Claude) | | |
+| Reporting | The four `rpt_*` views, the year-over-year and income-group reconciliation tests, the CSV export (Claude) | | |
+| pytest | `conftest.py` with the fake API, 57 tests across four files (Claude) | | |
+| README | The sections filled in from the live run and test results: quick start timing, observed API behavior, dropped fields, report summaries, test tables, decisions (Claude) | | |
 
-> **TODO (every step):** fill the row before committing that step. Be specific: which file, what you rewrote, which test or live check confirmed it.
+Checks Claude ran while drafting:
+
+- Live runs against the API, with every page accepted on the first attempt.
+- `dbt build`: PASS=88, plus one deliberate failure, which showed that a failing build leaves `output/` untouched.
+- 57 pytest tests, passing locally and in the Docker `test` service with no network.
+- A mutation check: the indicator check disabled on purpose, with three tests failing.
+- The documented commands run from a fresh clone.
+- Raw data checked directly: the empty `unit`, USA GDP's int tokens and the 1e-15 consistency margin were confirmed by querying raw.
+
+> **TODO (author):** fill "What I changed" and "How I verified" for each step. Name the file, what you rewrote, and which test or live check confirmed it.
+
 
 ---
 
 ## Unfinished work and next steps
 
-> **TODO (end of build):** list anything not finished, with why and the next step.
+Not built:
+
+- **R-ANL-05, the optional dashboard.** The CSVs and `data/warehouse.duckdb` are the reporting layer. A small Evidence or Streamlit page over the four views would be the next step.
+- **Historical income classifications.** The v2 API returns only the current group (D-05). The World Bank's historical classification file (OGHIST) could become a seed with a `year` column, joined in `rpt_income_group_by_year`.
+- **A live check of a cache-buster recovery.** No wrong body occurred in the live runs, so that path is covered by tests on recorded wrong bodies only.
 
 Known next steps beyond the brief:
 

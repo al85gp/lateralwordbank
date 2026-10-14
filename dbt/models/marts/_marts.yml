@@ -1,0 +1,98 @@
+version: 2
+
+models:
+  - name: dim_country
+    description: One row per country in scope. One to many with fct_indicator_year.
+    columns:
+      - name: country_iso3
+        description: ISO3 code, the business key.
+        data_tests: [not_null, unique]
+      - name: iso2_code
+        description: ISO2 code.
+        data_tests: [not_null]
+      - name: country_name
+        description: Country name.
+        data_tests: [not_null]
+      - name: region_name
+        description: World Bank region name.
+      - name: income_group_code
+        description: Current World Bank income classification id (HIC, UMC, LMC, LIC; INX when not classified), applied to every year.
+        data_tests: [not_null]
+      - name: income_group_name
+        description: Current World Bank income classification name.
+        data_tests: [not_null]
+
+  - name: dim_indicator
+    description: One row per indicator in scope. One to many with fct_indicator_year.
+    columns:
+      - name: indicator_code
+        description: World Bank indicator code, the business key.
+        data_tests: [not_null, unique]
+      - name: indicator_name
+        description: Indicator name from the API; null only if the API returned no record for it.
+      - name: unit
+        description: Unit, from config.
+        data_tests: [not_null]
+      - name: aggregation
+        description: How the indicator aggregates across countries (`sum` or `population_weighted_mean`), from config.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [sum, population_weighted_mean]
+      - name: source_id
+        description: World Bank source id; "2" is World Development Indicators.
+
+  - name: fct_indicator_year
+    description: >
+      One row per requested country x indicator x year, so 9 x 4 x 7 = 252 rows with the default
+      config. Many to one with dim_country and dim_indicator. A missing value is a row with
+      `value_status`, never an absent row and never 0.
+    data_tests:
+      - unique:
+          column_name: "concat_ws('|', country_iso3, indicator_code, year)"
+    columns:
+      - name: country_iso3
+        description: Business key, part 1.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_country')
+                field: country_iso3
+      - name: indicator_code
+        description: Business key, part 2.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_indicator')
+                field: indicator_code
+      - name: year
+        description: Business key, part 3.
+        data_tests: [not_null]
+      - name: value
+        description: The value as published (DOUBLE); null unless `value_status` is `reported`.
+      - name: value_status
+        description: >
+          `reported`; `null_in_source` (the API returned the row with a null value); or
+          `not_returned` (requested, but no row came back).
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [reported, null_in_source, not_returned]
+      - name: obs_status
+        description: The API's `obs_status`, passed through.
+      - name: decimals
+        description: The API's `decimal`, passed through.
+      - name: source_last_updated
+        description: The API's `lastupdated` for the indicator's source.
+      - name: load_id
+        description: Lineage, the load; null only when `not_returned`.
+      - name: request_url
+        description: Lineage, the canonical URL of the page; null only when `not_returned`.
+      - name: body_sha256
+        description: Lineage, the SHA-256 of the page body; null only when `not_returned`.
+      - name: record_index
+        description: Lineage, the record's position in the page's data array; null only when `not_returned`.

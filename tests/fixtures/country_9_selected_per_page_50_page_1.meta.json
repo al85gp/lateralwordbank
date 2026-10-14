@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;CAN;DEU;GBR;IND;JPN;MEX;USA;ZAF?format=json&per_page=50&page=1",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T15:14:44Z",
+  "notes": "Country call with an explicit page=1, the pipeline's canonical URL. 9 rows; validated (page, pages, per_page, total 9, every id requested). sha256 1eb97a11."
+}

@@ -1,0 +1,35 @@
+name: wb_pipeline
+version: "1.0.0"
+config-version: 2
+profile: wb_pipeline
+
+model-paths: ["models"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+
+flags:
+  send_anonymous_usage_stats: false
+
+vars:
+  # The load to build from; null means the latest completed load. Set by `python -m wb_pipeline`.
+  load_id: null
+  # The weight for population_weighted_mean aggregations.
+  population_indicator: SP.POP.TOTL
+
+models:
+  wb_pipeline:
+    staging:
+      +schema: staging
+      +materialized: view
+    marts:
+      +schema: marts
+      +materialized: table
+    reporting:
+      +schema: reporting
+      +materialized: view
+
+data_tests:
+  wb_pipeline:
+    # Failing rows are kept in the dq schema, so a warning can be printed and an error inspected.
+    +store_failures: true
+    +schema: dq
