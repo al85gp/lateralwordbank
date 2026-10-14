@@ -75,7 +75,7 @@ Task: a **local, configuration-driven** pipeline that retrieves the data, prepar
 
 ## Constraints and grading signals
 
-> **Superseded in part (2026-10-13).** The recruiter's note says there is no time frame and asks for a polished, production-grade solution: *"a complete, thoughtful solution over a quick one."* The 4–6 h limit and the priority-order cut list below no longer constrain the plan. The grading focus still applies. See [`CLAUDE.md`](../CLAUDE.md) §1.
+> **Superseded in part (2026-10-13).** The recruiter's note says there is no time frame and asks for a polished, production-grade solution: *"a complete, thoughtful solution over a quick one."* The 4–6 h limit and the priority-order cut list below no longer constrain the plan. The grading focus still applies.
 
 
 - Suggested time: **4–6 hours**. Stop at the limit; document unfinished work and next steps in the README.
@@ -94,11 +94,11 @@ These are not stated verbatim but fall out of the explicit ones. Each needs a do
 
 | ID | Derived requirement | From |
 |---|---|---|
-| D-01 | Distinguish three states per country-indicator-year: **value present**, **API returned the row with a null value**, **API returned no row at all**. **Confirmed:** the API produces both forms; for example, life expectancy 2025 comes back as null rows, and years outside the source's time axis are omitted ([api_calls/02](../api_calls/02_indicator_observations.md)) | R-ANL-01, "missing is meaningful" |
+| D-01 | Distinguish three states per country-indicator-year: **value present**, **API returned the row with a null value**, **API returned no row at all**. **Confirmed:** the API produces both forms; for example, life expectancy 2025 comes back as null rows, and years outside the source's time axis are omitted ([api_calls/02](api_calls/02_indicator_observations.md)) | R-ANL-01, "missing is meaningful" |
 | D-02 | Build an expected-combination **spine** (countries × indicators × years from config) so absent rows become visible | R-ANL-01, R-MOD-04 |
 | D-03 | YoY: prior missing → YoY null with a reason flag; prior zero → percent change undefined (null), absolute change still computed | R-ANL-02 |
 | D-04 | "Latest available year" is per **country × indicator** (the latest non-null value), not a single global max year | R-ANL-03 |
-| D-05 | Income group comes from country metadata. **Confirmed:** the v2 API exposes only the **current** classification (`?date=` is ignored), so "by year" means current group × observation year, documented as an assumption ([api_calls/01](../api_calls/01_countries_and_classifications.md)) | R-ANL-04, R-ING-01 |
+| D-05 | Income group comes from country metadata. **Confirmed:** the v2 API exposes only the **current** classification (`?date=` is ignored), so "by year" means current group × observation year, documented as an assumption ([api_calls/01](api_calls/01_countries_and_classifications.md)) | R-ANL-04, R-ING-01 |
 | D-06 | Consistency check: `NY.GDP.PCAP.CD ≈ NY.GDP.MKTP.CD / SP.POP.TOTL` within a tolerance; plus range checks (population > 0, life expectancy within plausible bounds) | R-DQ-02 |
 | D-07 | Lineage per row: load/run id, request URL, page, fetched-at, response hash, source `lastupdated`; raw responses kept immutable | R-ING-05 |
 | D-08 | Idempotency at the analytical layer: unique on (`country_iso3`, `indicator_code`, `year`); the raw layer may append per run but must not inflate analytics | R-ING-07, R-DQ-01 |
