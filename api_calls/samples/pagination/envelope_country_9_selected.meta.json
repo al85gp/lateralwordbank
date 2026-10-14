@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;CAN;DEU;GBR;IND;JPN;MEX;USA;ZAF?format=json",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:11:23Z",
+  "notes": "Our 9 countries in one call (semicolon list). Meta per_page is a STRING (\"50\"); page/pages/total numbers. 1 page, 9 rows."
+}

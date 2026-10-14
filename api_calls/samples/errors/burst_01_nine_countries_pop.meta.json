@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;CAN;DEU;GBR;IND;JPN;MEX;USA;ZAF/indicator/SP.POP.TOTL?format=json&date=2018:2024&per_page=100",
+  "http_status": 200,
+  "content_type": "application/json",
+  "fetched_at_utc": "2026-10-14T01:15:20Z",
+  "notes": "Exact pipeline-style call (9 countries, SP.POP.TOTL, 2018:2024, per_page=100) -> 63 rows, 1 page. First of a 10-call sequential burst: call 1 MISS (0.17s), calls 2-10 HIT (0.06-0.16s), all byte-identical (sha256 0e4577f4...). No rate-limit or Retry-After headers in any of the 10 responses."
+}

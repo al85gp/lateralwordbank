@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/indicator/NY.GDP.MKTP.CD?format=json",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:11:15Z",
+  "notes": "Indicator metadata for GDP (current US$). unit is empty string even though the series metadata Unitofmeasure is 'Current US$'."
+}

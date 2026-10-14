@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/indicator/NOT.A.CODE?format=json",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:13:54Z",
+  "notes": "Invalid indicator code on /indicator: HTTP 200, JSON array with a single message object (id '120', key 'Invalid value'). Docs say 120 maps to HTTP 404."
+}

@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;USA/indicator/SP.DYN.LE00.IN?source=2&format=json&date=2024:2026&per_page=1000",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:29:37Z",
+  "notes": "VERIFIER fixture. Recommended call shape (single indicator, source=2) over a range that includes an unpublished year: 2025 rows come back with value:null and NO 'scale' key; 2026 (outside the time axis) is absent; total=4 counts the null rows. Byte-identical to the same URL without source= (fetched 1 s later)."
+}

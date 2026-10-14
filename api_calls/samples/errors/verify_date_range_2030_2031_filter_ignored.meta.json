@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA/indicator/SP.POP.TOTL?format=json&date=2030:2031",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:28:05Z",
+  "notes": "Range entirely after the last available year: filter silently ignored, full series returned (total 66). Contrast: single year date=2030 returns the no-data envelope. Only page 1 saved. (curl http_code/time_total/bytes: 200 0.089677 9891). Saved by the adversarial verifier."
+}

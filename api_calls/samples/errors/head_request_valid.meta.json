@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA/indicator/SP.POP.TOTL?format=json&date=2018:2024",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:12:53Z",
+  "notes": "HEAD request (curl -I) -> HTTP 200 with headers only (no body file saved). Served from Cloudflare cache: cf-cache-status HIT, age 70. No rate-limit headers."
+}

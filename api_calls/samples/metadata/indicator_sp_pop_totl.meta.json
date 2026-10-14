@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/indicator/SP.POP.TOTL?format=json",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:11:13Z",
+  "notes": "Indicator metadata (v2 /indicator/{code}). Envelope: page/pages/total are JSON numbers but per_page is a quoted string \"50\". unit is empty string. topics[].value 'Health ' has a trailing space. sourceOrganization uses \\u000a newlines and ';' separators. No lastupdated field on this endpoint."
+}

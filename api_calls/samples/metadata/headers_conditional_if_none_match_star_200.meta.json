@@ -1,0 +1,10 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;CAN;DEU;GBR;IND;JPN;MEX;USA;ZAF/indicator/SP.POP.TOTL?format=json&date=2018:2024&footnote=y&per_page=100",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:13:05Z",
+  "notes": "If-None-Match: * -> HTTP 200 full body (no ETag support observed). set-cookie values redacted.",
+  "request_headers": [
+    "If-None-Match: *"
+  ]
+}

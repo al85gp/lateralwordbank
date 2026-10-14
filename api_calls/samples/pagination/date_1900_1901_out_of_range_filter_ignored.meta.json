@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;CAN;DEU;GBR;IND;JPN;MEX;USA;ZAF/indicator/SP.POP.TOTL?format=json&date=1900:1901",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:14:08Z",
+  "notes": "GOTCHA: a date RANGE lying entirely outside the data (1900:1901) is silently IGNORED. The API returns ALL years (1960-2025), total 594, instead of zero rows. Only page 1 is saved."
+}

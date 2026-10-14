@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/xx/country/BRA?format=json",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:16:45Z",
+  "notes": "Unsupported language prefix 'xx'."
+}

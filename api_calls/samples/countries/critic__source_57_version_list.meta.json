@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/sources/57/version/data?format=json&per_page=1000",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T02:02:35Z",
+  "notes": "CRITIC (completeness pass). /sources/57/version/data lists 142 archived WDI versions (198904 ... 202607). Object envelope."
+}

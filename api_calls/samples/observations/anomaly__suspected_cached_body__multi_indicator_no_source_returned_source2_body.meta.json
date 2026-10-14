@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;CAN;DEU;GBR;IND;JPN;MEX;USA;ZAF/indicator/SP.POP.TOTL;NY.GDP.MKTP.CD;NY.GDP.PCAP.CD;SP.DYN.LE00.IN?format=json&date=2018:2024&per_page=1000",
+  "http_status": 200,
+  "content_type": "application/json",
+  "fetched_at_utc": "2026-10-14T01:13:30Z",
+  "notes": "ANOMALY. Multi-indicator URL WITHOUT source= returned HTTP 200 with a body byte-identical to the source=2 call made 16s earlier (served fast, 0.2s, Content-Type 'application/json' without charset and without access-control-* headers, cf-cache-status MISS). A fresh URL without source= (see error__multi_indicator_without_source__http200_error_120) returns error 120, so this body is believed to be an origin-side cached response for a different request. Keep as a fixture for request/response consistency checks."
+}

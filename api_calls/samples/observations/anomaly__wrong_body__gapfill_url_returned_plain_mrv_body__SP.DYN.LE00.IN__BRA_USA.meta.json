@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;USA/indicator/SP.DYN.LE00.IN?format=json&mrv=3&gapfill=Y",
+  "http_status": 200,
+  "content_type": "application/json",
+  "fetched_at_utc": "2026-10-14T01:15:49Z",
+  "notes": "ANOMALY (confirmed wrong body). URL asks mrv=3&gapfill=Y but body is byte-identical to the plain mrv=3 response fetched 3s earlier (years 2022-2024). Fresh URL with countries swapped (optional_param__mrv_3_gapfill_Y__SP.DYN.LE00.IN__USA_BRA_fresh) returns 2023-2025 with a fabricated 2025. Content-Type 'application/json' without charset."
+}

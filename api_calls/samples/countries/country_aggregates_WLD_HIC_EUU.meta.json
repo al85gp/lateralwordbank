@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/WLD;HIC;EUU?format=json",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:15:16Z",
+  "notes": "Aggregates requested via country endpoint: shows the region/incomeLevel 'Aggregates' markers and empty-string fields."
+}

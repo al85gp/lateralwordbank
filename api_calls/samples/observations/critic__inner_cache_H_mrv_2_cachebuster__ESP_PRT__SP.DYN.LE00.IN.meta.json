@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/ESP;PRT/indicator/SP.DYN.LE00.IN?format=json&mrv=2&cb=critic20261014c",
+  "http_status": 200,
+  "content_type": "application/json",
+  "fetched_at_utc": "2026-10-14T01:59:57Z",
+  "notes": "CRITIC (completeness pass). Step H: step-G URL + cb=critic20261014c. Served from the inner-cache path (plain 'application/json', 0.21 s, cf MISS, last-modified = date) with step G's body (byte-identical). The cache-buster escaped Cloudflare but NOT the inner cache here (same as area 02 V24); the body was correct only because step G's was."
+}

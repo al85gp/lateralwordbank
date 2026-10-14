@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/sources?format=json&per_page=100",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:11:31Z",
+  "notes": "All sources (71 at fetch time) with per_page=100 so it fits in one page. Envelope page/pages/per_page/total are ALL quoted strings here (unlike indicator/data envelopes). Every field in rows is a string; concepts is a quoted number; metadataavailability can be ''. description and url are '' for all rows."
+}

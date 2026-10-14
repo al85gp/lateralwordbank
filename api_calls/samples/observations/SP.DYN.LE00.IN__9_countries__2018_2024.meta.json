@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;CAN;DEU;GBR;IND;JPN;MEX;USA;ZAF/indicator/SP.DYN.LE00.IN?source=2&format=json&date=2018:2024&per_page=1000",
+  "http_status": 200,
+  "content_type": "application/json",
+  "fetched_at_utc": "2026-10-14T01:21:54Z",
+  "notes": "GOLDEN FIXTURE (exact recommended production URL): SP.DYN.LE00.IN for 9 countries (ISO3, semicolon list) x 2018:2024 inclusive, source=2 (WDI), per_page=1000 -> 1 page, 63 rows. Byte-identical to the same call without source= fetched ~15 min earlier (same lastupdated 2026-10-08). NOTE: this response was served in 0.18s with Content-Type 'application/json' (no charset, no access-control-* headers) - the pattern of the API's origin-side cache, which appears to ignore the source= param when matching; content is nevertheless byte-identical to the fresh no-source response (22.6s, charset=utf-8) fetched at 2026-10-14T01:12:09Z."
+}

@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/CAN;MEX/indicator/SP.DYN.LE00.IN;SP.POP.TOTL?source=2&format=json&date=2024:2025&per_page=100",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:29:41Z",
+  "notes": "VERIFIER fixture. Multi-indicator call with source=2: the null-value rows (SP.DYN.LE00.IN 2025) carry an extra key \"scale\":\"\" that non-null rows and single-indicator null rows do not have. sourceid is JSON null. Indicators grouped in request order. This request took 39.5 s for 8 rows."
+}

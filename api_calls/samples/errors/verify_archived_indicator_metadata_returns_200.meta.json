@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/indicator/IC.BUS.EASE.XQ?format=json",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:29:02Z",
+  "notes": "Indicator METADATA for the archived IC.BUS.EASE.XQ returns HTTP 200 with a normal record (source id \"57\" 'WDI Database Archives'), not error 175. The /indicator pre-flight cannot detect archived indicators. Note meta per_page is a quoted string \"50\" and there is no sourceid/lastupdated key. (curl http_code/time_total/bytes: 200 0.120532 812). Saved by the adversarial verifier."
+}

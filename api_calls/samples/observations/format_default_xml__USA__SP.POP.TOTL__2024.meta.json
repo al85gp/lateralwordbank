@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/USA/indicator/SP.POP.TOTL?date=2024",
+  "http_status": 200,
+  "content_type": "text/xml",
+  "fetched_at_utc": "2026-10-14T01:18:33Z",
+  "notes": "No format= param: shows the default (documented XML) response for the same observation."
+}

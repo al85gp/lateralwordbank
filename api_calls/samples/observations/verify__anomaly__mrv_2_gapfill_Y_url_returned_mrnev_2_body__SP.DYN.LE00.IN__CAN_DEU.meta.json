@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/CAN;DEU/indicator/SP.DYN.LE00.IN?format=json&mrv=2&gapfill=Y",
+  "http_status": 200,
+  "content_type": "application/json",
+  "fetched_at_utc": "2026-10-14T01:32:05Z",
+  "notes": "VERIFIER fixture, ANOMALY reproduced. URL asks mrv=2&gapfill=Y but body is byte-identical to the mrnev=2 response (no fabricated 2025, sourceid:null, no 'unit' key). Plain Content-Type 'application/json', cf-cache-status MISS, 0.17 s. Compare the fresh gapfill call verify__gapfill_fabricates_2025__SP.DYN.LE00.IN__IND_ZAF."
+}

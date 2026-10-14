@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/USA/indicator/SP.POP.TOTL;NY.GDP.MKTP.CD?format=json&date=2024",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:25:57Z",
+  "notes": "Verifier. Multi-indicator data call WITHOUT source param: HTTP 200 with JSON message id 120 \"Invalid value\" (docs map id 120 to 404)."
+}

@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;USA/indicator/SP.DYN.LE00.IN?format=json&mrv=3",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:15:46Z",
+  "notes": "mrv=3 without date: returns 2024, 2023, 2022 - the unpublished 2025 (null) year is skipped because no requested country has data for it."
+}

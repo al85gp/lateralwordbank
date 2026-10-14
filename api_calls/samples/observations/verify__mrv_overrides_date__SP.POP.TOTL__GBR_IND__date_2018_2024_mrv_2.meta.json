@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/GBR;IND/indicator/SP.POP.TOTL?format=json&date=2018:2024&mrv=2",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:32:56Z",
+  "notes": "VERIFIER fixture. date=2018:2024&mrv=2 returns 2025 and 2024 - a year OUTSIDE the requested date range - proving mrv overrides date."
+}

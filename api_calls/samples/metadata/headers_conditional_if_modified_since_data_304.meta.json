@@ -1,0 +1,10 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;CAN;DEU;GBR;IND;JPN;MEX;USA;ZAF/indicator/SP.POP.TOTL?format=json&date=2018:2024&footnote=y&per_page=100",
+  "http_status": 304,
+  "content_type": null,
+  "fetched_at_utc": "2026-10-14T01:13:03Z",
+  "notes": "Conditional request with If-Modified-Since equal to the cached Last-Modified -> HTTP 304, empty body, served by Cloudflare (HIT). set-cookie values redacted.",
+  "request_headers": [
+    "If-Modified-Since: Wed, 14 Oct 2026 01:12:36 GMT"
+  ]
+}

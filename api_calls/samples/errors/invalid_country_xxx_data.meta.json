@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/XXX/indicator/SP.POP.TOTL?format=json&date=2018:2024",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:11:44Z",
+  "notes": "ERROR PAYLOAD WITH HTTP 200. Invalid ISO3 country XXX on the data endpoint -> [{\"message\":[{id:\"120\",key:\"Invalid value\",...}]}]. Error id is a quoted string. Does not say WHICH parameter was invalid. cache-control public, max-age=86400 (errors are cacheable for 24h)."
+}

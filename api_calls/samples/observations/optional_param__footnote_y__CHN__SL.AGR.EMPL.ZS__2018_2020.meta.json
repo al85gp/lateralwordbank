@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/CHN/indicator/SL.AGR.EMPL.ZS?format=json&date=2018:2020&footnote=y",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:18:30Z",
+  "notes": "OUT-OF-SCOPE: documented footnote example (CHN agriculture employment) narrowed to 2018:2020, to see a populated footnote."
+}

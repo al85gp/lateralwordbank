@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;CAN;DEU;GBR;IND;JPN;MEX;USA;ZAF/indicator/SP.DYN.LE00.IN?format=json&date=2023:2026&per_page=1000",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:14:17Z",
+  "notes": "Date range extending past the latest published year (2025, 2026). Shows whether not-yet-published years come back as value:null rows or are omitted."
+}

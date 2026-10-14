@@ -1,0 +1,598 @@
+# World Bank Indicators API (v2) - canonical calls
+# Format: VS Code "REST Client" / JetBrains HTTP Client (### separates requests).
+# Public API: no auth, no key. Never add credentials.
+# Grouped by area doc (see README.md). Every request notes what it demonstrates and, where one exists,
+# the fixture under samples/ that holds its byte-for-byte response (captured 2026-10-14 UTC).
+# Be polite: run requests one at a time; cold cache misses can take 10-40 s.
+
+@base = https://api.worldbank.org/v2
+@countries = BRA;CAN;DEU;GBR;IND;JPN;MEX;USA;ZAF
+@indicators = SP.POP.TOTL;NY.GDP.MKTP.CD;NY.GDP.PCAP.CD;SP.DYN.LE00.IN
+@years = 2018:2024
+
+# ====================================================================================================
+# 0. THE PIPELINE RUN - exact calls, in order (README "The pipeline call plan")
+# ====================================================================================================
+
+### R0 - Release watermark: WDI lastupdated (assert it equals every observation envelope's lastupdated)
+# Envelope page/pages/per_page/total are all STRINGS here. Fixture: samples/metadata/source_2_wdi.json
+GET {{base}}/source/2?format=json
+
+### R1 - Income-level reference list (7 rows: HIC INX LIC LMC LMY MIC UMC; LMY/MIC are composites)
+# All-string envelope. Fixture: samples/countries/incomeLevel.json
+GET {{base}}/incomeLevel?format=json
+
+### R2 - Country dimension for the 9 economies + pre-flight of configured codes
+# Current income level / region / lending type; per_page echoed as a STRING; expect exactly 9 rows.
+# Fixture: samples/countries/country_9_selected.json
+GET {{base}}/country/{{countries}}?format=json&per_page=50
+
+### R3 - Indicator metadata: Population, total (assert 1 row and source.id == "2"; unit is "")
+# Fixture: samples/metadata/indicator_sp_pop_totl.json
+GET {{base}}/indicator/SP.POP.TOTL?format=json
+
+### R4 - Indicator metadata: GDP (current US$)
+# Fixture: samples/metadata/indicator_ny_gdp_mktp_cd.json
+GET {{base}}/indicator/NY.GDP.MKTP.CD?format=json
+
+### R5 - Indicator metadata: GDP per capita (current US$)
+# Fixture: samples/metadata/indicator_ny_gdp_pcap_cd.json
+GET {{base}}/indicator/NY.GDP.PCAP.CD?format=json
+
+### R6 - Indicator metadata: Life expectancy at birth, total (years)
+# Fixture: samples/metadata/indicator_sp_dyn_le00_in.json
+GET {{base}}/indicator/SP.DYN.LE00.IN?format=json
+
+### R7 - Metadata API: Series (unit, aggregation, licence) + Country (IncomeGroup) + Country-Series notes in one call
+# Returns a JSON OBJECT, total = 300 metatype entries. NEVER send per_page (it splits variables across pages).
+# Fixture: samples/metadata/country_series_metadata_9_countries_4_indicators.json
+GET {{base}}/sources/2/country/{{countries}}/series/{{indicators}}/metadata?format=json
+
+### R8 - Observations: SP.POP.TOTL, 9 countries x 2018-2024 -> 1 page, 63 rows (all int tokens)
+# Fixture (golden): samples/observations/SP.POP.TOTL__9_countries__2018_2024.json
+GET {{base}}/country/{{countries}}/indicator/SP.POP.TOTL?source=2&format=json&date={{years}}&per_page=1000
+
+### R9 - Observations: NY.GDP.MKTP.CD -> 63 rows; USA values are int tokens, others floats (land as DOUBLE)
+# Fixture (golden): samples/observations/NY.GDP.MKTP.CD__9_countries__2018_2024.json
+GET {{base}}/country/{{countries}}/indicator/NY.GDP.MKTP.CD?source=2&format=json&date={{years}}&per_page=1000
+
+### R10 - Observations: NY.GDP.PCAP.CD -> 63 rows (decimal:1)
+# Fixture (golden): samples/observations/NY.GDP.PCAP.CD__9_countries__2018_2024.json
+GET {{base}}/country/{{countries}}/indicator/NY.GDP.PCAP.CD?source=2&format=json&date={{years}}&per_page=1000
+
+### R11 - Observations: SP.DYN.LE00.IN -> 63 rows (decimal:0 although values have up to 13 decimals)
+# Fixture (golden): samples/observations/SP.DYN.LE00.IN__9_countries__2018_2024.json
+GET {{base}}/country/{{countries}}/indicator/SP.DYN.LE00.IN?source=2&format=json&date={{years}}&per_page=1000
+
+### R1b (optional) - Region labels: 44 rows, different record shape (id/code/iso2code/name)
+# Fixture: samples/countries/region.json
+GET {{base}}/region?format=json&per_page=100
+
+### R1c (optional) - Lending-type labels: 4 rows
+# Fixture: samples/countries/lendingType.json
+GET {{base}}/lendingType?format=json
+
+### R12 (optional benchmark) - WB income-group aggregates as "countries": 28 rows, countryiso3code "" (map via XD/XT/XN/XM)
+# Uses CURRENT membership for every year. Fixture: samples/countries/income_aggregates_SP.POP.TOTL.json
+GET {{base}}/country/HIC;UMC;LMC;LIC/indicator/SP.POP.TOTL?format=json&date={{years}}&per_page=100
+
+### R13 (optional benchmark) - income-group aggregates, GDP (aggregation: gap-filled total). Cold miss took 45.2 s.
+# Fixture: samples/countries/income_aggregates_NY.GDP.MKTP.CD.json
+GET {{base}}/country/HIC;UMC;LMC;LIC/indicator/NY.GDP.MKTP.CD?format=json&date={{years}}&per_page=100
+
+### R14 (optional benchmark) - income-group aggregates, GDP per capita (aggregation: weighted average)
+# Fixture: samples/countries/income_aggregates_NY.GDP.PCAP.CD.json
+GET {{base}}/country/HIC;UMC;LMC;LIC/indicator/NY.GDP.PCAP.CD?format=json&date={{years}}&per_page=100
+
+### R15 (optional benchmark) - income-group aggregates, life expectancy (aggregation: weighted average)
+# Fixture: samples/countries/income_aggregates_SP.DYN.LE00.IN.json
+GET {{base}}/country/HIC;UMC;LMC;LIC/indicator/SP.DYN.LE00.IN?format=json&date={{years}}&per_page=100
+
+# ====================================================================================================
+# 1. COUNTRIES, REGIONS, INCOME LEVELS (01_countries_and_classifications.md)
+# ====================================================================================================
+
+### 1.1 Single country by ISO3
+# Fixture: samples/countries/country_single_BRA.json
+GET {{base}}/country/BRA?format=json
+
+### 1.2 Single country by lower-case ISO2 - byte-identical to 1.1 (codes are case-insensitive)
+# Fixture: samples/countries/country_single_br_iso2_lower.json
+GET {{base}}/country/br?format=json
+
+### 1.3 Mixed ISO2/ISO3, mixed case, shuffled order - returned sorted by id (BRA, DEU, USA, ZAF)
+# Fixture: samples/countries/country_mixed_iso2_iso3_reordered.json
+GET {{base}}/country/zaf;US;de;BRA?format=json
+
+### 1.4 date= is IGNORED on /country (byte-identical to 1.1): no historical income classification exists here
+# Fixture: samples/countries/country_BRA_with_date_param.json
+GET {{base}}/country/BRA?format=json&date=2018
+
+### 1.5 Aggregates through /country: region.id "NA", lendingType.id "", lat/long ""
+# Fixture: samples/countries/country_aggregates_WLD_HIC_EUU.json
+GET {{base}}/country/WLD;HIC;EUU?format=json
+
+### 1.6 Full country list, page 1 of 3 at per_page=100 (296 rows = 217 economies + 79 aggregates)
+# Fixtures: samples/countries/country_all_per_page_100_page{1,2,3}.json
+GET {{base}}/country?format=json&per_page=100&page=1
+
+### 1.7 Full country list, last page (96 rows)
+GET {{base}}/country?format=json&per_page=100&page=3
+
+### 1.8 Current members of an income level (HIC: 86 economies in the API vs 87 on the WB page)
+# Fixture: samples/countries/incomeLevel_HIC_country.json
+GET {{base}}/incomeLevel/HIC/country?format=json&per_page=100
+
+### 1.9 Same via query argument - byte-identical to 1.8
+GET {{base}}/country?incomeLevel=HIC&format=json&per_page=100
+
+### 1.10 Single income level
+# Fixture: samples/countries/incomeLevel_UMC_single.json
+GET {{base}}/incomeLevel/UMC?format=json
+
+### 1.11 Single region - note the trailing space in "Latin America & Caribbean "
+# Fixture: samples/countries/region_LCN_single.json
+GET {{base}}/region/LCN?format=json
+
+### 1.12 GOTCHA: lending-type member filter returns every economy TWICE (total 134, 67 unique ids)
+# Fixture: samples/countries/lendingType_IBD_country_duplicates.json
+GET {{base}}/lendingType/IBD/country?format=json&per_page=200
+
+### 1.13 DO NOT USE: language prefix translates names AND capitalCity (ZAF "Ciudad del Cabo")
+# Fixture: samples/countries/country_9_selected_es.json (holds 3 countries despite its name)
+GET {{base}}/es/country/BRA;DEU;ZAF?format=json
+
+### 1.14 WDI country metadata: IncomeGroup with no year dimension (top-level JSON OBJECT)
+# Fixture: samples/countries/sources2_country_BRA_metadata.json
+GET {{base}}/sources/2/country/BRA/metadata?format=json
+
+### 1.15 Join keys: observation country.id is ISO2 ("BR"), countryiso3code is ISO3 ("BRA")
+# Fixture: samples/countries/indicator_BRA_join_key_demo.json
+GET {{base}}/country/BRA/indicator/SP.POP.TOTL?format=json&date=2024
+
+### 1.16 Evidence that WB aggregates use CURRENT membership (sum of current LIC/LMC/UMC members == aggregate, 2018)
+# Fixture: samples/countries/indicator_all_SP.POP.TOTL_2018_membership_check.json (53 KB)
+GET {{base}}/country/all/indicator/SP.POP.TOTL?format=json&date=2018&per_page=400
+
+# ====================================================================================================
+# 2. INDICATOR OBSERVATIONS (02_indicator_observations.md)
+# ====================================================================================================
+
+### 2.1 Baseline: 1 country x 1 indicator, 7 rows (date is a quoted string, value a number)
+# Fixture: samples/observations/single_country_single_indicator__USA__SP.POP.TOTL__2018_2024.json
+GET {{base}}/country/USA/indicator/SP.POP.TOTL?format=json&date={{years}}&per_page=50
+
+### 2.2 Multi-indicator (needs source=2): 252 rows == union of R8-R11, but meta.sourceid is null. Not recommended.
+# Fixture: samples/observations/multi_indicator__4_indicators__9_countries__2018_2024__source2.json
+GET {{base}}/country/{{countries}}/indicator/{{indicators}}?source=2&format=json&date={{years}}&per_page=1000
+
+### 2.3 Multi-indicator WITHOUT source -> HTTP 200 + error 120
+# Fixture: samples/observations/error__multi_indicator_without_source__http200_error_120.json
+GET {{base}}/country/ZAF;USA;MEX;JPN;IND;GBR;DEU;CAN;BRA/indicator/SP.DYN.LE00.IN;NY.GDP.PCAP.CD;NY.GDP.MKTP.CD;SP.POP.TOTL?format=json&date={{years}}&per_page=1000
+
+### 2.4 Ordering: reversed country list still comes back BRA..ZAF (sorted by ISO3, then date desc)
+# Fixture: samples/observations/ordering__countries_reversed__SP.POP.TOTL__2024.json
+GET {{base}}/country/ZAF;USA;MEX;JPN;IND;GBR;DEU;CAN;BRA/indicator/SP.POP.TOTL?format=json&date=2024&per_page=1000
+
+### 2.5 Sort key is ISO3, not ISO2: AUT;AUS returns AUS first
+# Fixture: samples/observations/verify__sort_key_is_iso3__SP.POP.TOTL__AUT_AUS__2024.json
+GET {{base}}/country/AUT;AUS/indicator/SP.POP.TOTL?format=json&date=2024
+
+### 2.6 Lower-case ISO2 + lower-case indicator accepted; canonical ids echoed back
+# Fixture: samples/observations/codes__iso2_lowercase__sp.pop.totl__2024.json
+GET {{base}}/country/br;ca;de;gb;in;jp;mx;us;za/indicator/sp.pop.totl?format=json&date=2024&per_page=1000
+
+### 2.7 MISSING DATA: 2025 rows come back with value:null (reported_null); 2026 rows are ABSENT (not_returned)
+# Fixture: samples/observations/date_range_beyond_latest__SP.DYN.LE00.IN__9_countries__2023_2026.json
+GET {{base}}/country/{{countries}}/indicator/SP.DYN.LE00.IN?format=json&date=2023:2026&per_page=1000
+
+### 2.8 MISSING DATA in the recommended call shape (single indicator, source=2)
+# Fixture: samples/observations/verify__null_rows_single_indicator_source2__SP.DYN.LE00.IN__BRA_USA__2024_2026.json
+GET {{base}}/country/BRA;USA/indicator/SP.DYN.LE00.IN?source=2&format=json&date=2024:2026&per_page=1000
+
+### 2.9 MISSING DATA (out-of-scope sparse series): Gini, 25 of 63 in-range cells are null rows
+# Fixture: samples/observations/missing_data_example__SI.POV.GINI__9_countries__2018_2024.json
+GET {{base}}/country/{{countries}}/indicator/SI.POV.GINI?format=json&date={{years}}&per_page=1000
+
+### 2.10 Years just past scope: 2025 published for POP/GDP/PCAP, null for LE; 2026 absent; null rows carry "scale":""
+# Fixture: samples/observations/out_of_scope_years__4_indicators__9_countries__2025_2026__source2.json
+GET {{base}}/country/{{countries}}/indicator/{{indicators}}?source=2&format=json&date=2025:2026&per_page=1000
+
+### 2.11 Reversed date range is normalised (same rows as 2018:2024)
+# Fixture: samples/observations/date_range_reversed__USA__SP.POP.TOTL__2024_2018.json
+GET {{base}}/country/USA/indicator/SP.POP.TOTL?format=json&date=2024:2018
+
+### 2.12 source=2 on a single-indicator call: byte-identical to the call without it (source is a no-op here)
+# Fixture: samples/observations/single_indicator_with_source2__NY.GDP.MKTP.CD__9_countries_reversed__2018_2024.json
+GET {{base}}/country/ZAF;USA;MEX;JPN;IND;GBR;DEU;CAN;BRA/indicator/NY.GDP.MKTP.CD?source=2&format=json&date={{years}}&per_page=1000
+
+### 2.13 DO NOT USE: mrv overrides date (returns 2025, outside 2018:2024)
+# Fixture: samples/observations/verify__mrv_overrides_date__SP.POP.TOTL__GBR_IND__date_2018_2024_mrv_2.json
+GET {{base}}/country/GBR;IND/indicator/SP.POP.TOTL?format=json&date={{years}}&mrv=2
+
+### 2.14 DO NOT USE: mrnev hides gaps; sourceid null and rows have no "unit" key
+# Fixture: samples/observations/verify__mrnev_2_rows_have_no_unit_key__SP.DYN.LE00.IN__CAN_DEU.json
+GET {{base}}/country/CAN;DEU/indicator/SP.DYN.LE00.IN?format=json&mrnev=2
+
+### 2.15 DO NOT USE: gapfill fabricates 2025 values (copies 2024) with obs_status ""
+# Fixture: samples/observations/verify__gapfill_fabricates_2025__SP.DYN.LE00.IN__IND_ZAF.json
+GET {{base}}/country/IND;ZAF/indicator/SP.DYN.LE00.IN?format=json&mrv=2&gapfill=Y
+
+### 2.16 DO NOT USE: scale=y is lossy (USA GDP 2024 -> value 29, scale "trillions")
+# Fixture: samples/observations/optional_param__scale_y__USA__NY.GDP.MKTP.CD__2024.json
+GET {{base}}/country/USA/indicator/NY.GDP.MKTP.CD?format=json&date=2024&scale=y
+
+### 2.17 footnote=y adds a "footnote" key to every row ("" for USA population)
+# Fixture: samples/observations/optional_param__footnote_y__USA__SP.POP.TOTL__2018_2024.json
+GET {{base}}/country/USA/indicator/SP.POP.TOTL?format=json&date={{years}}&footnote=y
+
+### 2.18 Non-empty obs_status exists in other sources ("F" = forecast, source 27) - never seen in scope
+# Fixture: samples/observations/obs_status_example__CHN__NYGDPMKTPKDZ__mrv3.json
+GET {{base}}/country/CHN/indicator/NYGDPMKTPKDZ?format=json&mrv=3
+
+### 2.19 Default format is XML when format= is omitted
+# Fixture: samples/observations/format_default_xml__USA__SP.POP.TOTL__2024.xml
+GET {{base}}/country/USA/indicator/SP.POP.TOTL?date=2024
+
+# ====================================================================================================
+# 3. INDICATOR & SOURCE METADATA, FRESHNESS (03_indicator_and_source_metadata.md)
+# ====================================================================================================
+
+### 3.1 Semicolon list on /indicator is NOT supported: HTTP 200, total 0, [] (assert 1 row per code)
+# Fixture: samples/metadata/indicator_multi_semicolon_returns_empty.json
+GET {{base}}/indicator/{{indicators}}?format=json
+
+### 3.2 Metadata API, series only (4 series, 60 metatype entries; per_page "5000" default)
+# Fixture: samples/metadata/series_metadata_4_indicators.json
+GET {{base}}/sources/2/series/{{indicators}}/metadata?format=json
+
+### 3.3 GOTCHA: per_page IS honoured by the Metadata API and splits a variable across pages
+# Fixtures: samples/metadata/series_metadata_4_indicators_per_page_10_page_{1,2}.json
+GET {{base}}/sources/2/series/{{indicators}}/metadata?format=json&per_page=10
+
+### 3.4 Metadata API IncomeGroup only (current classification, no year)
+# Fixture: samples/metadata/country_incomegroup_metatype_9_countries.json
+GET {{base}}/sources/2/country/{{countries}}/metatypes/incomegroup/metadata?format=json
+
+### 3.5 Footnote metadata (undocumented path) - DEU population "Break in series." 2022/2023
+# Fixture: samples/metadata/footnote_metadata_deu_sp_pop_totl_2022_2023.json
+GET {{base}}/sources/2/footnote/DEU~SP.POP.TOTL~YR2022;DEU~SP.POP.TOTL~YR2023/metadata?format=json
+
+### 3.6 Footnote metadata, no footnote -> HTTP 200 text/xml error id 160 even with format=json
+# Fixture: samples/metadata/footnote_metadata_usa_sp_pop_totl_2020_not_found.xml
+GET {{base}}/sources/2/footnote/USA~SP.POP.TOTL~YR2020/metadata?format=json
+
+### 3.7 Invalid series on the Metadata API -> HTTP 200 text/xml error id 160
+# Fixture: samples/metadata/series_metadata_invalid_code_xml_error.xml
+GET {{base}}/sources/2/series/NOT.A.CODE/metadata?format=json
+
+### 3.8 Observations with footnote=y: DEU 2022/2023 "Break in series."
+# Fixture: samples/metadata/data_sp_pop_totl_9_countries_2018_2024_footnote_y.json
+GET {{base}}/country/{{countries}}/indicator/SP.POP.TOTL?format=json&date={{years}}&footnote=y&per_page=100
+
+### 3.9 Docs vs live: footnote=n does NOT remove footnotes (served from cache, plain application/json)
+# Fixture: samples/metadata/data_sp_pop_totl_deu_2022_2023_footnote_n.json
+GET {{base}}/country/DEU/indicator/SP.POP.TOTL?format=json&date=2022:2023&footnote=n
+
+### 3.10 Conditional request: If-Modified-Since -> 304 from Cloudflare (cache state, NOT a data-change signal)
+# Headers: samples/metadata/headers_conditional_if_modified_since_data_304.txt
+GET {{base}}/country/{{countries}}/indicator/SP.POP.TOTL?format=json&date={{years}}&footnote=y&per_page=100
+If-Modified-Since: Wed, 14 Oct 2026 01:12:36 GMT
+
+### 3.11 No ETag support: If-None-Match: * -> 200 with full body
+# Headers: samples/metadata/headers_conditional_if_none_match_star_200.txt
+GET {{base}}/country/{{countries}}/indicator/SP.POP.TOTL?format=json&date={{years}}&footnote=y&per_page=100
+If-None-Match: *
+
+### 3.12 Sources list (71 sources; all-string envelope)
+# Fixture: samples/metadata/sources_list_per_page_100.json
+GET {{base}}/sources?format=json&per_page=100
+
+### 3.13 Source 2 concepts (Country, Series, Time) - JSON OBJECT envelope, per_page a number
+# Fixture: samples/metadata/source_2_concepts.json
+GET {{base}}/sources/2/concepts?format=json
+
+### 3.14 Advanced Data API (BETA) - also carries lastupdated
+# Fixture: samples/metadata/advanced_data_deu_sp_pop_totl_2023.json
+GET {{base}}/sources/2/country/DEU/series/SP.POP.TOTL/time/yr2023/data?format=json
+
+### 3.15 Unversioned (v1-style) path -> 301 to /v2 with a text body (docs say "Resource not found")
+# Fixture: samples/metadata/unversioned_path_redirect_301.txt
+# @no-redirect
+GET https://api.worldbank.org/indicator/SP.POP.TOTL?format=json
+
+### 3.16 Successor platform Data360 (different host and schema; OBS_VALUE is a string) - comparison only
+# Fixture: samples/metadata/data360_wdi_sp_pop_totl_deu_top10.json
+GET https://data360api.worldbank.org/data360/data?DATABASE_ID=WB_WDI&INDICATOR=WB_WDI_SP_POP_TOTL&REF_AREA=DEU&top=10
+
+# ====================================================================================================
+# 4. PAGINATION & ENVELOPE (04_pagination_and_envelope.md)
+# ====================================================================================================
+
+### 4.1 Default per_page = 50 -> 63 rows split over 2 pages
+# Fixture: samples/pagination/obs_SP.POP.TOTL_9c_default_per_page.json
+GET {{base}}/country/{{countries}}/indicator/SP.POP.TOTL?format=json&date={{years}}
+
+### 4.2 per_page=10, page 1 of 7 (pages 1-7 concatenate to the per_page=1000 result)
+# Fixtures: samples/pagination/obs_SP.POP.TOTL_9c_per_page_10_page_{1..7}.json
+GET {{base}}/country/{{countries}}/indicator/SP.POP.TOTL?format=json&date={{years}}&per_page=10&page=1
+
+### 4.3 per_page=10, page 7 of 7 (last page, 3 rows)
+GET {{base}}/country/{{countries}}/indicator/SP.POP.TOTL?format=json&date={{years}}&per_page=10&page=7
+
+### 4.4 Page past the end -> HTTP 200, meta echoes page 999, rows [] (stop on meta.pages)
+# Fixture: samples/pagination/page_beyond_range_page_999.json
+GET {{base}}/country/{{countries}}/indicator/SP.POP.TOTL?format=json&date={{years}}&per_page=10&page=999
+
+### 4.5 Zero match (single out-of-range year) -> [{page:0,...,sourceid:null,lastupdated:null}, null]
+# Fixture: samples/pagination/zero_match_date_1900_single_year.json
+GET {{base}}/country/BRA/indicator/SP.POP.TOTL?format=json&date=1900
+
+### 4.6 GOTCHA: a range ENTIRELY outside the data is silently ignored -> ALL years (total 594)
+# Fixture: samples/pagination/date_1900_1901_out_of_range_filter_ignored.json
+GET {{base}}/country/{{countries}}/indicator/SP.POP.TOTL?format=json&date=1900:1901
+
+### 4.7 Invalid page value -> HTTP 200 + 1-element error array (id "120")
+# Fixture: samples/pagination/invalid_page_0_error_120.json
+GET {{base}}/country/{{countries}}/indicator/SP.POP.TOTL?format=json&date={{years}}&per_page=10&page=0
+
+### 4.8 per_page=32767 is the maximum accepted value
+# Fixture: samples/errors/per_page_32767.json
+GET {{base}}/country/BRA/indicator/SP.POP.TOTL?format=json&date=2023:2024&per_page=32767
+
+### 4.9 per_page above 32767 -> HTTP 400 text/html WCF "Request Error" (UTF-8 BOM, not JSON)
+# Fixture: samples/pagination/obs_SP.POP.TOTL_9c_per_page_50000_http_400.html
+GET {{base}}/country/{{countries}}/indicator/SP.POP.TOTL?format=json&date={{years}}&per_page=50000
+
+### 4.10 Envelope typing: /country sends per_page as a STRING
+# Fixture: samples/pagination/envelope_country_list_per_page_2.json
+GET {{base}}/country?format=json&per_page=2
+
+### 4.11 Envelope typing: /incomeLevel sends page/pages/per_page/total as STRINGS; page past end -> []
+# Fixture: samples/pagination/incomelevel_list_page_beyond_range_page_2.json
+GET {{base}}/incomeLevel?format=json&page=2
+
+### 4.12 Envelope typing: /indicator list (per_page string; 29,544 indicators)
+# Fixture: samples/pagination/envelope_indicator_list_per_page_2.json
+GET {{base}}/indicator?format=json&per_page=2
+
+### 4.13 Accept header is ignored: still XML without format=json
+# Fixture: samples/errors/accept_json_header_without_format_param.xml
+GET {{base}}/country/BRA/indicator/SP.POP.TOTL?date=2023:2024
+Accept: application/json
+
+### 4.14 Explicit format=xml (byte-identical to the no-format default)
+# Fixture: samples/pagination/format_xml_explicit_bra_sp_pop_totl.xml
+GET {{base}}/country/BRA/indicator/SP.POP.TOTL?date={{years}}&format=xml
+
+### 4.15 format=jsonstat - JSON-stat object, no paging meta (not used)
+# Fixture: samples/pagination/format_jsonstat_bra_sp_pop_totl.json
+GET {{base}}/country/BRA/indicator/SP.POP.TOTL?date={{years}}&format=jsonstat
+
+# ====================================================================================================
+# 5. ERRORS & RESILIENCE (05_errors_and_resilience.md) - most errors arrive with HTTP 200
+# ====================================================================================================
+
+### 5.1 Positive control (7 rows)
+# Fixture: samples/errors/baseline_valid_bra_pop_2018_2024.json
+GET {{base}}/country/BRA/indicator/SP.POP.TOTL?format=json&date={{years}}
+
+### 5.2 Invalid ISO3 country on the data endpoint -> HTTP 200 + error 120 (102 bytes, no parameter named)
+# Fixture: samples/errors/invalid_country_xxx_data.json
+GET {{base}}/country/XXX/indicator/SP.POP.TOTL?format=json&date={{years}}
+
+### 5.3 Invalid country on /country -> HTTP 200 + error 120
+# Fixture: samples/errors/invalid_country_xxx_metadata.json
+GET {{base}}/country/XXX?format=json
+
+### 5.4 One bad code poisons the whole batch: BRA;XXX -> error 120, no BRA rows
+# Fixture: samples/errors/mixed_valid_invalid_countries_bra_xxx.json
+GET {{base}}/country/BRA;XXX/indicator/SP.POP.TOTL?format=json&date={{years}}
+
+### 5.5 Invalid indicator on the data endpoint -> HTTP 200 + error 120
+# Fixture: samples/errors/invalid_indicator_data.json
+GET {{base}}/country/BRA/indicator/NOT.A.CODE?format=json&date={{years}}
+
+### 5.6 Invalid indicator on /indicator -> HTTP 200 + error 120
+# Fixture: samples/errors/invalid_indicator_metadata.json
+GET {{base}}/indicator/NOT.A.CODE?format=json
+
+### 5.7 Archived indicator on the data endpoint -> HTTP 200 + UNDOCUMENTED error 175 (key "Invalid format")
+# Fixture: samples/errors/archived_indicator_doing_business.json
+GET {{base}}/country/BRA/indicator/IC.BUS.EASE.XQ?format=json&date={{years}}
+
+### 5.8 Same archived indicator on /indicator -> normal metadata with source.id "57" (pre-flight must check source.id == "2")
+# Fixture: samples/errors/verify_archived_indicator_metadata_returns_200.json
+GET {{base}}/indicator/IC.BUS.EASE.XQ?format=json
+
+### 5.9 Bad date value -> HTTP 200 + error 120
+# Fixture: samples/errors/invalid_date_abc.json
+GET {{base}}/country/BRA/indicator/SP.POP.TOTL?format=json&date=abc
+
+### 5.10 Bad date end -> HTTP 200 + error 120
+# Fixture: samples/errors/invalid_date_end_2018_abc.json
+GET {{base}}/country/BRA/indicator/SP.POP.TOTL?format=json&date=2018:abc
+
+### 5.11 Hyphenated range -> HTTP 200 + error 120
+# Fixture: samples/observations/error__bad_date_format__2018-2024.json
+GET {{base}}/country/USA/indicator/SP.POP.TOTL?format=json&date=2018-2024
+
+### 5.12 Reversed range: was a WCF 400 once at 01:12Z, then HTTP 200 normalised at 01:28Z (treat 400 as retry-once)
+# Fixtures: samples/errors/reversed_date_range_2024_2018.html, samples/errors/verify_reversed_date_range_2024_2018_now_200.json
+GET {{base}}/country/BRA/indicator/SP.POP.TOTL?format=json&date=2024:2018
+
+### 5.13 Out-of-range range ignored -> full series 1960-2025 (validate every row's year)
+# Fixture: samples/errors/date_range_1800_1801_filter_ignored.json
+GET {{base}}/country/BRA/indicator/SP.POP.TOTL?format=json&date=1800:1801
+
+### 5.14 Partly out-of-range range is clipped correctly (1960-1965, total 6)
+# Fixture: samples/errors/verify_date_range_1950_1965_partially_out_of_range.json
+GET {{base}}/country/BRA/indicator/SP.POP.TOTL?format=json&date=1950:1965
+
+### 5.15 Single future year -> no-data envelope [meta0, null]
+# Fixture: samples/errors/future_year_2030.json
+GET {{base}}/country/BRA/indicator/SP.POP.TOTL?format=json&date=2030
+
+### 5.16 per_page=0 -> HTTP 200 + error 120 (also -1 and abc)
+# Fixtures: samples/errors/per_page_zero.json, per_page_negative_one.json, per_page_abc.json
+GET {{base}}/country/BRA/indicator/SP.POP.TOTL?format=json&date={{years}}&per_page=0
+
+### 5.17 page=abc -> HTTP 200 + error 120 (also page=0)
+# Fixtures: samples/errors/page_abc.json, samples/errors/page_zero.json
+GET {{base}}/country/BRA/indicator/SP.POP.TOTL?format=json&date={{years}}&per_page=5&page=abc
+
+### 5.18 Page past the end -> HTTP 200, rows [] (meta.page echoes 999)
+# Fixture: samples/errors/page_beyond_last_page_999.json
+GET {{base}}/country/BRA/indicator/SP.POP.TOTL?format=json&date={{years}}&page=999
+
+### 5.19 Empty list item (BRA;;USA) -> HTTP 200 + error 120
+# Fixture: samples/errors/empty_segment_in_country_list.json
+GET {{base}}/country/BRA;;USA/indicator/SP.POP.TOTL?format=json&date=2023:2024
+
+### 5.20 QUIRK: ISO2 "XX" on the data endpoint -> no-data envelope (NOT an error); use ISO3 + pre-flight
+# Fixture: samples/errors/invalid_iso2_country_xx_data_empty_envelope.json
+GET {{base}}/country/XX/indicator/SP.POP.TOTL?format=json&date=2023:2024
+
+### 5.21 Other unknown ISO2 (QZ) -> error 120 as expected
+# Fixture: samples/errors/verify_invalid_iso2_country_qz_data_error_120.json
+GET {{base}}/country/QZ/indicator/SP.POP.TOTL?format=json&date=2023:2024
+
+### 5.22 Invalid source -> HTTP 200 + TWO error messages
+# Fixture: samples/errors/invalid_source_9999.json
+GET {{base}}/country/BRA/indicator/SP.POP.TOTL?source=9999&format=json&date=2023:2024
+
+### 5.23 Multi-indicator with one bad code (source=2) -> whole request fails, error 120
+# Fixture: samples/errors/multi_indicator_valid_plus_invalid_source2.json
+GET {{base}}/country/BRA/indicator/SP.POP.TOTL;NOT.A.CODE?source=2&format=json&date=2023:2024
+
+### 5.24 Invalid incomeLevel filter -> HTTP 200 + error 120
+# Fixture: samples/errors/invalid_income_level_filter_zzz.json
+GET {{base}}/country?incomeLevel=ZZZ&format=json
+
+### 5.25 Unsupported language prefix -> HTTP 200 + error 150
+# Fixture: samples/errors/unsupported_language_prefix_xx.json
+GET {{base}}/xx/country/BRA?format=json
+
+### 5.26 Bad format value -> HTTP 200 text/xml error 111
+# Fixture: samples/errors/bad_format_value_yaml.xml
+GET {{base}}/country/BRA/indicator/SP.POP.TOTL?format=yaml&date={{years}}
+
+### 5.27 Error without format= -> HTTP 200 XML <wb:error> (id 120)
+# Fixture: samples/errors/invalid_country_xxx_xml_error.xml
+GET {{base}}/country/XXX/indicator/SP.POP.TOTL?date={{years}}
+
+### 5.28 Unknown endpoint -> HTTP 404 text/html (BOM) "Endpoint not found."
+# Fixture: samples/errors/unknown_endpoint_path.html
+GET {{base}}/notanendpoint?format=json
+
+### 5.29 Wrong API version -> HTTP 404 JSON OBJECT {"statusCode":404,"message":"Resource not found"}
+# Fixture: samples/errors/invalid_api_version_v9.json
+GET https://api.worldbank.org/v9/country/BRA?format=json
+
+### 5.30 Retired v1-style path -> 301 to /v2 (client must NOT follow redirects silently)
+# Fixture: samples/errors/retired_v1_endpoint_no_version.txt
+# @no-redirect
+GET https://api.worldbank.org/countries/BRA?format=json
+
+### 5.31 Plain http -> 302 to https from Cloudflare (fatal config error in the pipeline)
+# Fixture: samples/errors/http_scheme_no_tls.html
+# @no-redirect
+GET http://api.worldbank.org/v2/country/BRA/indicator/SP.POP.TOTL?format=json&date={{years}}
+
+### 5.32 HEAD works (200, headers only; no rate-limit headers)
+# Sidecar: samples/errors/head_request_valid.meta.json (+ .headers.txt)
+HEAD {{base}}/country/BRA/indicator/SP.POP.TOTL?format=json&date={{years}}
+
+### 5.33 15 ISO3 codes in one segment work (total 105)
+# Fixture: samples/errors/long_country_list_15_codes.json
+GET {{base}}/country/BRA;CAN;DEU;GBR;IND;JPN;MEX;USA;ZAF;CHN;FRA;ITA;AUS;KOR;ARG/indicator/SP.POP.TOTL?format=json&date={{years}}&per_page=200
+
+### 5.34 Path segment of 1,599 chars (BRA x400) -> HTTP 400 text/html "Bad Request - Invalid URL" (docs: 1,500 limit)
+# Fixture: samples/errors/path_segment_over_1500_chars.html
+GET {{base}}/country/BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA/indicator/SP.POP.TOTL?format=json&date=2024&per_page=5
+
+### 5.35 Path segment of 299 chars (BRA x75): accepted, but the cold origin took ~32 s and a 30 s client timed out; the retry was a CDN HIT
+# Sidecar: samples/errors/path_segment_299_chars_client_timeout.meta.json; retry: samples/errors/path_segment_299_chars_retry_cdn_hit.json
+GET {{base}}/country/BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA;BRA/indicator/SP.POP.TOTL?format=json&date=2024&per_page=5
+
+### 5.36 Lower-case codes accepted (byte-identical to 5.1)
+# Fixture: samples/errors/lowercase_codes_bra_sp_pop_totl.json
+GET {{base}}/country/bra/indicator/sp.pop.totl?format=json&date={{years}}
+
+### 5.37 Trailing slash accepted (byte-identical; Content-Type without charset)
+# Fixture: samples/errors/trailing_slash_data.json
+GET {{base}}/country/BRA/indicator/SP.POP.TOTL/?format=json&date={{years}}
+
+### 5.38 Unknown query param silently ignored (a typo like perpage= would NOT error)
+# Fixture: samples/errors/unknown_query_param_ignored.json
+GET {{base}}/country/BRA/indicator/SP.POP.TOTL?format=json&date={{years}}&foo=bar
+
+### 5.39 Percent-encoded colon in date accepted (what an HTTP library may send)
+# Fixture: samples/errors/percent_encoded_colon_in_date.json
+GET {{base}}/country/BRA/indicator/SP.POP.TOTL?format=json&date=2018%3A2024
+
+### 5.40 Percent-encoded semicolon in the country list accepted
+# Fixture: samples/errors/percent_encoded_semicolon_in_country_list.json
+GET {{base}}/country/BRA%3BUSA/indicator/SP.POP.TOTL?format=json&date=2023:2024
+
+### 5.41 gzip honoured (hash the DECODED body)
+GET {{base}}/country/{{countries}}/indicator/NY.GDP.MKTP.CD?source=2&format=json&date={{years}}&per_page=1000
+Accept-Encoding: gzip
+
+# ====================================================================================================
+# 6. SYNTHESIS CHECKS (README "Contradictions") - run 2026-10-14 01:42-01:43 UTC
+# ====================================================================================================
+
+### 6.1 Golden R8 + footnote=y: fresh render, adds "footnote" to every row (DEU 2022/2023 "Break in series.")
+# Fixture: samples/synthesis/obs_SP.POP.TOTL__golden_url_plus_footnote_y.json
+GET {{base}}/country/{{countries}}/indicator/SP.POP.TOTL?source=2&format=json&date={{years}}&per_page=1000&footnote=y
+
+### 6.2 Golden R8 with params reordered: Cloudflare MISS but an old origin-cache copy (last-modified 01:21:50)
+# Fixture: samples/synthesis/obs_SP.POP.TOTL__golden_params_reordered__origin_cache_copy.json
+GET {{base}}/country/{{countries}}/indicator/SP.POP.TOTL?format=json&per_page=1000&date={{years}}&source=2
+
+### 6.3 Same without source=2: byte-identical (source is a no-op on single-indicator calls)
+# Fixture: samples/synthesis/obs_SP.POP.TOTL__no_source_reordered__origin_cache_copy.json
+GET {{base}}/country/{{countries}}/indicator/SP.POP.TOTL?per_page=1000&format=json&date={{years}}
+
+### 6.4 Golden R9 + unknown cache-buster param: fresh origin render this time (not guaranteed; not used by the pipeline)
+# Fixture: samples/synthesis/obs_NY.GDP.MKTP.CD__golden_url_plus_cachebuster.json
+GET {{base}}/country/{{countries}}/indicator/NY.GDP.MKTP.CD?source=2&format=json&date={{years}}&per_page=1000&cb=synth20261014a
+
+# ====================================================================================================
+# 7. COMPLETENESS CRITIC CHECKS (README "Completeness critic pass") - run 2026-10-14 01:59-02:03 UTC
+# ====================================================================================================
+
+### 7.1 R0 exactly: an edge copy ~19.7 h old at 01:59Z (cf HIT, age 23275) - the watermark is itself cached
+# Fixture: samples/metadata/critic__source_2_recheck.json
+GET {{base}}/source/2?format=json
+
+### 7.2 R0 + cache-buster: fresh render in 0.17 s, same lastupdated (cheap production release probe)
+# Fixture: samples/metadata/critic__source_2_cachebuster.json
+GET {{base}}/source/2?format=json&cb=critic20261014a
+
+### 7.3 Retry test, step A: recommended call shape + footnote=y (fresh render, footnote keys)
+# Fixture: samples/observations/critic__inner_cache_A_footnote_y__MEX_ZAF__NY.GDP.PCAP.CD.json
+GET {{base}}/country/MEX;ZAF/indicator/NY.GDP.PCAP.CD?source=2&format=json&date={{years}}&per_page=1000&footnote=y
+
+### 7.4 Step B (send within seconds of 7.3): same URL WITHOUT footnote -> got step A's body (plain application/json, fresh-looking headers)
+# Fixture: samples/observations/critic__inner_cache_B_no_footnote__MEX_ZAF__NY.GDP.PCAP.CD.json
+# Step C (same URL again) was a Cloudflare HIT with the same body: samples/observations/critic__inner_cache_C_no_footnote_retry_same_url__MEX_ZAF__NY.GDP.PCAP.CD.json
+GET {{base}}/country/MEX;ZAF/indicator/NY.GDP.PCAP.CD?source=2&format=json&date={{years}}&per_page=1000
+
+### 7.5 Step D: same URL + cache-buster -> correct body (no footnote keys). Retry HTTP-200 bodies this way.
+# Fixture: samples/observations/critic__inner_cache_D_no_footnote_cachebuster__MEX_ZAF__NY.GDP.PCAP.CD.json
+# Counter-example (token served from the inner cache): samples/observations/critic__inner_cache_H_mrv_2_cachebuster__ESP_PRT__SP.DYN.LE00.IN.json
+GET {{base}}/country/MEX;ZAF/indicator/NY.GDP.PCAP.CD?source=2&format=json&date={{years}}&per_page=1000&cb=critic20261014b
+
+### 7.6 Golden R9/R10/R11 + footnote=y (decision D4 fixtures; all footnotes ""). R10 shown; swap the indicator for R9/R11.
+# Fixtures: samples/synthesis/obs_{NY.GDP.MKTP.CD,NY.GDP.PCAP.CD,SP.DYN.LE00.IN}__golden_url_plus_footnote_y.json
+GET {{base}}/country/{{countries}}/indicator/NY.GDP.PCAP.CD?source=2&format=json&date={{years}}&per_page=1000&footnote=y
+
+### 7.7 WDI Database Archives (source 57): 142 versions exist...
+# Fixture: samples/countries/critic__source_57_version_list.json
+GET {{base}}/sources/57/version/data?format=json&per_page=1000
+
+### 7.8 ...but the Metadata API ignores /version/: byte-identical to the no-version call, current IncomeGroup (no historical groups via the API)
+# Fixtures: samples/countries/critic__source_57_country_VEN_version_202307_metadata.json, critic__source_57_country_VEN_metadata_no_version.json
+GET {{base}}/sources/57/country/VEN/version/202307/metadata?format=json

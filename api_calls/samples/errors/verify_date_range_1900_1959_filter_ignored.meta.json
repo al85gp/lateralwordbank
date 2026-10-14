@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA/indicator/SP.POP.TOTL?format=json&date=1900:1959",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:28:04Z",
+  "notes": "Range entirely before the first available year (1960): filter silently ignored, full series returned (total 66, pages 2, years 2025..1960). Only page 1 (50 rows) saved. (curl http_code/time_total/bytes: 200 0.395257 9891). Saved by the adversarial verifier."
+}

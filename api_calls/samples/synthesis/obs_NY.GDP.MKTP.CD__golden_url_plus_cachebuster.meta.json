@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;CAN;DEU;GBR;IND;JPN;MEX;USA;ZAF/indicator/NY.GDP.MKTP.CD?source=2&format=json&date=2018:2024&per_page=1000&cb=synth20261014a",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:43:02Z",
+  "notes": "Synthesis live check. Golden NY.GDP.MKTP.CD URL + unknown param cb=synth20261014a. Cloudflare MISS, max-age=86400, last-modified = date (fresh origin render, 1.6 s). Body byte-identical to the golden fixture. Here the unknown param bypassed BOTH cache layers (agrees with area 03 V6/V7; contrasts with area 02 V24, where an unknown param got a cached copy)."
+}

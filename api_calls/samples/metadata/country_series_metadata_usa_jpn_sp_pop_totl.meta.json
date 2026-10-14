@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/sources/2/country/USA;JPN/series/SP.POP.TOTL/metadata?format=json",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:12:04Z",
+  "notes": "Documented example pattern (country usa;jpn x series SP.POP.TOTL). Country-Series variable ids are '{ISO3}~{SERIES}'."
+}

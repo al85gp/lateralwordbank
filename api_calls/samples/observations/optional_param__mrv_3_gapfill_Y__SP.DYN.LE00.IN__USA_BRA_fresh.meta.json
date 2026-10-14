@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/USA;BRA/indicator/SP.DYN.LE00.IN?format=json&mrv=3&gapfill=Y",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:17:22Z",
+  "notes": "In-scope indicator, fresh URL. mrv=3&gapfill=Y returns 2025 (unpublished, null in plain calls) filled with the 2024 value for BRA and USA, obs_status empty. Proves gapfill fabricates values. Pipeline must NOT use gapfill."
+}

@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/JPN;MEX/indicator/SI.POV.GINI?format=json&mrnev=2",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:16:36Z",
+  "notes": "OUT-OF-SCOPE indicator. Correct mrnev=2 answer (fresh URL): 2 most recent NON-NULL values per country, regardless of year (JPN 2020,2019; MEX 2024,2022). Hides gaps; sourceid comes back null (JSON null) for mrnev. Pipeline must NOT use mrnev."
+}

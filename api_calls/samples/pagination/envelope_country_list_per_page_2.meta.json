@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country?format=json&per_page=2",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:11:22Z",
+  "notes": "Country list meta: page/pages/total are numbers but per_page is a STRING (\"2\"). No sourceid/lastupdated keys."
+}

@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/HIC;UMC;LMC;LIC/indicator/NY.GDP.MKTP.CD?format=json&date=2018:2024&per_page=100",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T02:00:13Z",
+  "notes": "CRITIC (completeness pass). Optional benchmark R13: WB income-group aggregates (HIC/UMC/LMC/LIC as 'countries') for GDP current US$, 2018-2024. 28 rows (XD/XM/XN/XT x 7), no nulls, countryiso3code \"\", 26 float + 2 int value tokens, decimal 0, sourceid \"2\", lastupdated 2026-10-08. Cold MISS took 45.2 s (new maximum latency observed). Current-membership aggregates; benchmark only."
+}

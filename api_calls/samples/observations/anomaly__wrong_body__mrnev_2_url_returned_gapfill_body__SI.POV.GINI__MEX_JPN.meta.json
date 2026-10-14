@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/MEX;JPN/indicator/SI.POV.GINI?format=json&mrnev=2",
+  "http_status": 200,
+  "content_type": "application/json",
+  "fetched_at_utc": "2026-10-14T01:16:11Z",
+  "notes": "ANOMALY (confirmed wrong body). URL asks mrnev=2 but body is byte-identical to the mrv=4&gapfill=Y response fetched 1s earlier (8 rows incl. 2025, gap-filled). Content-Type 'application/json' without charset; a retry 24s later was a Cloudflare HIT with the same wrong body. The same query with country order swapped (optional_param__mrnev_2__SI.POV.GINI__JPN_MEX) returned the correct 4-row mrnev answer. Fixture for request/response consistency checks."
+}

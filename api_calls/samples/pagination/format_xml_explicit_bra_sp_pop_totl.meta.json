@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA/indicator/SP.POP.TOTL?date=2018:2024&format=xml",
+  "http_status": 200,
+  "content_type": "text/xml",
+  "fetched_at_utc": "2026-10-14T01:11:08Z",
+  "notes": "format=xml; byte-identical to the no-format response."
+}

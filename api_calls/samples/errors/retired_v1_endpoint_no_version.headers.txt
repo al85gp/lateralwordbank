@@ -1,0 +1,13 @@
+HTTP/2 301 
+date: Wed, 14 Oct 2026 01:13:40 GMT
+content-length: 155
+location: https://api.worldbank.org/v2/countries/BRA?format=json
+set-cookie: api.worldbank.orgCORS=<redacted>; Path=/; SameSite=None; Secure
+set-cookie: api.worldbank.org=<redacted>; Path=/
+set-cookie: __cf_bm=<redacted>; HttpOnly; SameSite=None; Secure; Path=/; Domain=worldbank.org; Expires=Wed, 14 Oct 2026 01:43:40 GMT
+set-cookie: _cfuvid=<redacted>; HttpOnly; SameSite=None; Secure; Path=/; Domain=worldbank.org
+cf-ray: a4a2b90aad0ff7fc-ORD
+cf-cache-status: DYNAMIC
+server: cloudflare
+request-context: appId=cid-v1:da002513-bd8b-4441-9f30-737944134422
+

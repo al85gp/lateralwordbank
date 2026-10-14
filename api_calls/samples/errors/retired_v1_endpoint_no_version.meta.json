@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/countries/BRA?format=json",
+  "http_status": 301,
+  "content_type": null,
+  "fetched_at_utc": "2026-10-14T01:13:40Z",
+  "notes": "Unversioned (v1-style) path /countries/BRA -> HTTP 301 to /v2/countries/BRA, no Content-Type header, plain-text body explaining v1 was discontinued on June 19, 2020."
+}

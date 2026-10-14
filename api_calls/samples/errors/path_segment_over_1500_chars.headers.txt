@@ -1,0 +1,12 @@
+HTTP/2 400 
+date: Wed, 14 Oct 2026 01:14:32 GMT
+content-type: text/html; charset=us-ascii
+content-length: 324
+set-cookie: api.worldbank.orgCORS=<redacted>; Path=/; SameSite=None; Secure
+set-cookie: api.worldbank.org=<redacted>; Path=/
+set-cookie: __cf_bm=<redacted>; HttpOnly; SameSite=None; Secure; Path=/; Domain=worldbank.org; Expires=Wed, 14 Oct 2026 01:44:32 GMT
+set-cookie: _cfuvid=<redacted>; HttpOnly; SameSite=None; Secure; Path=/; Domain=worldbank.org
+cf-ray: a4a2ba5258ebae13-ORD
+cf-cache-status: BYPASS
+server: cloudflare
+

@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA/indicator/SP.POP.TOTL?format=json&date=1950:1965",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:27:21Z",
+  "notes": "Partially out-of-range range: correctly clipped to 1960..1965 (total 6). The filter is only ignored when the WHOLE range is outside the available years. (curl http_code/time_total/bytes: 200 0.287190 1260). Saved by the adversarial verifier."
+}

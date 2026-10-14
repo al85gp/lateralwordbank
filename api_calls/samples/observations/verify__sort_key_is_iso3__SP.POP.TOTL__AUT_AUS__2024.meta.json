@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/AUT;AUS/indicator/SP.POP.TOTL?format=json&date=2024",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:34:32Z",
+  "notes": "VERIFIER fixture. Request lists AUT;AUS; response returns AUS (ISO2 AU, Australia) before AUT (ISO2 AT, Austria). ISO2 order would put AT first, so the row sort is not by ISO2; combined with GBR-before-IND (rules out name order) it is consistent with ISO3 ascending."
+}

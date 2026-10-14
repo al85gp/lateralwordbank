@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA/indicator/SP.POP.TOTL?format=json&date=1800:1801",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:13:23Z",
+  "notes": "SURPRISE: date=1800:1801 (years before any data) -> HTTP 200 with the FULL series (total 66, pages 2, years 2025..1960); the date filter was silently ignored. Only page 1 (50 rows) saved. Loader must verify every returned row's date is within the requested range."
+}

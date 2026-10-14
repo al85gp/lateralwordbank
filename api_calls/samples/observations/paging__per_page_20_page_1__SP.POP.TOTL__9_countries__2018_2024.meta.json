@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;CAN;DEU;GBR;IND;JPN;MEX;USA;ZAF/indicator/SP.POP.TOTL?format=json&date=2018:2024&per_page=20&page=1",
+  "http_status": 200,
+  "content_type": "application/json",
+  "fetched_at_utc": "2026-10-14T01:14:54Z",
+  "notes": "Paging: per_page=20, page=1 of 4. Served with Content-Type 'application/json' (no charset) like the anomalous cached responses, but content verified correct (pages 1-4 concatenated == golden single-page fixture)."
+}

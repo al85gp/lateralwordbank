@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/indicator/SP.POP.TOTL?format=json",
+  "http_status": 301,
+  "content_type": "",
+  "fetched_at_utc": "2026-10-14T01:13:32Z",
+  "notes": "Unversioned (v1-style) path: HTTP 301 with Location https://api.worldbank.org/v2/indicator/SP.POP.TOTL?format=json and a plain-text body. Docs say old endpoints return 'Resource not found'."
+}

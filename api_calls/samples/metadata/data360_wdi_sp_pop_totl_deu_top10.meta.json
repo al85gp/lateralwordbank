@@ -1,0 +1,7 @@
+{
+  "url": "https://data360api.worldbank.org/data360/data?DATABASE_ID=WB_WDI&INDICATOR=WB_WDI_SP_POP_TOTL&REF_AREA=DEU&top=10",
+  "http_status": 200,
+  "content_type": "application/json",
+  "fetched_at_utc": "2026-10-14T01:15:37Z",
+  "notes": "Successor platform Data360 API (different host data360api.worldbank.org). Pretty-printed JSON {count, value[]}; OBS_VALUE is a quoted STRING; rows are not ordered by TIME_PERIOD; top=10 limited rows while count=66. cf-cache-status DYNAMIC, no Cache-Control/Last-Modified. Not used by the pipeline; kept for comparison."
+}

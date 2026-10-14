@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA/indicator/SP.POP.TOTL?format=json&date=1800",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:28:41Z",
+  "notes": "Single out-of-range year: HTTP 200 no-data envelope [meta0, null] (filter NOT ignored), unlike the range 1800:1801. (curl http_code/time_total/bytes: 200 0.287141 85). Saved by the adversarial verifier."
+}

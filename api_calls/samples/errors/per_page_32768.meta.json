@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA/indicator/SP.POP.TOTL?format=json&date=2023:2024&per_page=32768",
+  "http_status": 400,
+  "content_type": "text/html",
+  "fetched_at_utc": "2026-10-14T01:16:16Z",
+  "notes": "per_page=32768 -> HTTP 400 text/html WCF 'Request Error' page. 10.6s. Upper bound of per_page is 32767 (Int16 max)."
+}

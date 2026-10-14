@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/sources/57/concepts?format=json",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T02:02:03Z",
+  "notes": "CRITIC (completeness pass). Source 57 (WDI Database Archives) concepts: Country, Series, Time and Version. Object envelope, per_page a JSON number. Probed to see whether archived WDI versions expose a historical IncomeGroup (decision D1)."
+}

@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;CAN;DEU;GBR;IND;JPN;MEX;USA;ZAF/indicator/SP.POP.TOTL?format=json&date=2018:2024&per_page=50000",
+  "http_status": 400,
+  "content_type": "text/html",
+  "fetched_at_utc": "2026-10-14T01:13:33Z",
+  "notes": "per_page=50000 -> HTTP 400 text/html 'Request Error' page with a UTF-8 BOM; NOT JSON. per_page=32767 works, 32768 fails the same way (looks like a signed 16-bit limit)."
+}

@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/sources/2/series/SP.POP.TOTL;NY.GDP.MKTP.CD;NY.GDP.PCAP.CD;SP.DYN.LE00.IN/metadata?format=json",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:12:03Z",
+  "notes": "Metadata API: /sources/2/series/{codes}/metadata accepts semicolon-joined series codes (one call for all 4). Object envelope; per_page is quoted '5000'; total counts metatype entries (60), not series. Metatype set varies per series (14-16 keys): e.g. NY.GDP.PCAP.CD lacks Limitationsandexceptions; only SP.POP.TOTL has Othernotes. Includes License_Type 'CC BY-4.0', License_URL, Unitofmeasure, Aggregationmethod, Periodicity, Referenceperiod."
+}

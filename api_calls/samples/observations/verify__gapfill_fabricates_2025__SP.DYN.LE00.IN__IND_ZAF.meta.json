@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/IND;ZAF/indicator/SP.DYN.LE00.IN?format=json&mrv=2&gapfill=Y",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:32:57Z",
+  "notes": "VERIFIER fixture. Fresh mrv=2&gapfill=Y: 2025 (unpublished, null in plain calls) is filled with the 2024 value for IND (72.235) and ZAF (66.312); obs_status stays \"\"."
+}

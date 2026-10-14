@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA/indicator/SP.POP.TOTL?format=jsonp&date=2023:2024",
+  "http_status": 200,
+  "content_type": "application/json",
+  "fetched_at_utc": "2026-10-14T01:14:10Z",
+  "notes": "format=jsonp without prefix -> plain JSON returned (no wrapper), Content-Type application/json without charset."
+}

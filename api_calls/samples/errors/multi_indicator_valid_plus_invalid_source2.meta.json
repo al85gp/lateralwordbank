@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA/indicator/SP.POP.TOTL;NOT.A.CODE?source=2&format=json&date=2023:2024",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:13:48Z",
+  "notes": "ERROR PAYLOAD WITH HTTP 200. SP.POP.TOTL;NOT.A.CODE with source=2 -> id 120 (whole request fails; no partial result)."
+}

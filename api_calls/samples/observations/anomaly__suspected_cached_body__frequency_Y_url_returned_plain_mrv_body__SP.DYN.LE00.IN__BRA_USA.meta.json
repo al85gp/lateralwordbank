@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;USA/indicator/SP.DYN.LE00.IN?format=json&mrv=3&frequency=Y",
+  "http_status": 200,
+  "content_type": "application/json",
+  "fetched_at_utc": "2026-10-14T01:15:50Z",
+  "notes": "SUSPECT-BUT-PROBABLY-CORRECT. URL asks mrv=3&frequency=Y; body byte-identical to plain mrv=3 response and served with Content-Type 'application/json' without charset (the pattern shared by confirmed wrong-body responses). A fresh retest (optional_param__mrv_3_frequency_Y__SP.DYN.LE00.IN__USA_BRA_fresh) returned the same rows, so for annual WDI data frequency=Y changes nothing."
+}

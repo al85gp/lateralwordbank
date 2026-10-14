@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA/indicator/SP.POP.TOTL?format=json&date=2024:2018",
+  "http_status": 400,
+  "content_type": "text/html",
+  "fetched_at_utc": "2026-10-14T01:12:11Z",
+  "notes": "HTTP 400, Content-Type text/html, WCF 'Request Error' XHTML page starting with a UTF-8 BOM (EF BB BF). Took 4.1s. cf-cache-status BYPASS (not cached). Same 1647-byte body (sha256 0d41cf6a...) also returned for per_page=32768 and per_page=100000. Not JSON even though format=json was requested."
+}

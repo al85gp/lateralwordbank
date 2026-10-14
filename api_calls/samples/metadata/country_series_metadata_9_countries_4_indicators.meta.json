@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/sources/2/country/BRA;CAN;DEU;GBR;IND;JPN;MEX;USA;ZAF/series/SP.POP.TOTL;NY.GDP.MKTP.CD;NY.GDP.PCAP.CD;SP.DYN.LE00.IN/metadata?format=json",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:12:20Z",
+  "notes": "Metadata API: /sources/2/country/{9 iso3}/series/{4 codes}/metadata. Returns three concepts: Country (9 variables incl. IncomeGroup, Region, CurrencyUnit, SpecialNotes...), Country-Series (18 variables: notes exist only for SP.POP.TOTL and SP.DYN.LE00.IN, none for the GDP series), Series (4). total=300 counts metatype entries."
+}

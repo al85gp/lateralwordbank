@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/sources/2/series/SP.POP.TOTL;NY.GDP.MKTP.CD;NY.GDP.PCAP.CD;SP.DYN.LE00.IN/metadata?format=json&per_page=10",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:26:44Z",
+  "notes": "Verifier. Metadata API honours per_page: per_page \"10\" (string), pages 6, total 60. Paging slices the flattened metatype entries: page 1 holds only the first 10 metatypes of NY.GDP.MKTP.CD."
+}

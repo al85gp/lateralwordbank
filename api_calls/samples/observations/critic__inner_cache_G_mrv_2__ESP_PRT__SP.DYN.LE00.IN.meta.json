@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/ESP;PRT/indicator/SP.DYN.LE00.IN?format=json&mrv=2",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:59:55Z",
+  "notes": "CRITIC (completeness pass). Step G: mrv=2 for the same pair 1 s after step F. This time NO substitution: correct mrv body (sourceid \"2\", unit key present), fresh render (charset=utf-8, 0.40 s). The anomaly in area 02 V17-V19 is intermittent."
+}

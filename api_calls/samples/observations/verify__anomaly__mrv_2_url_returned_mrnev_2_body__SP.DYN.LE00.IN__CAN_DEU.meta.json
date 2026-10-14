@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/CAN;DEU/indicator/SP.DYN.LE00.IN?format=json&mrv=2",
+  "http_status": 200,
+  "content_type": "application/json",
+  "fetched_at_utc": "2026-10-14T01:32:04Z",
+  "notes": "VERIFIER fixture, ANOMALY reproduced. URL asks mrv=2 but body is byte-identical to the mrnev=2 response for the same countries fetched 2 s earlier (envelope sourceid:null and rows without the 'unit' key, both mrnev traits). Plain Content-Type 'application/json' (no charset), cf-cache-status MISS, 0.17 s."
+}

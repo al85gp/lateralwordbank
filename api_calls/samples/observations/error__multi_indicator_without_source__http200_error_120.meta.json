@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/ZAF;USA;MEX;JPN;IND;GBR;DEU;CAN;BRA/indicator/SP.DYN.LE00.IN;NY.GDP.PCAP.CD;NY.GDP.MKTP.CD;SP.POP.TOTL?format=json&date=2018:2024&per_page=1000",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:17:21Z",
+  "notes": "Fresh multi-indicator URL WITHOUT source= (indicator and country order reversed so no cache could match). HTTP 200 with JSON error body: message id '120' Invalid value. Confirms docs: multi-indicator requests need source=. Note error is delivered with HTTP 200, not 404 as the error-code doc table states."
+}

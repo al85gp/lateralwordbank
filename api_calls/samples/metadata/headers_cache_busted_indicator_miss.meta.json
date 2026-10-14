@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/indicator/SP.POP.TOTL?format=json&cb=verify20261014a",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:27:09Z",
+  "notes": "Verifier. Unknown query param cb accepted; forces cf-cache-status MISS; last-modified equals date (render time); body byte-identical to indicator_sp_pop_totl.json. set-cookie values redacted."
+}

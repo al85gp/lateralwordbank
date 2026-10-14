@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/CHN/indicator/NYGDPMKTPKDZ?format=json&mrv=3",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:19:38Z",
+  "notes": "OUT-OF-SCOPE: documented obs_status example indicator (forecast flag 'F'). Attempt to see a non-empty obs_status."
+}

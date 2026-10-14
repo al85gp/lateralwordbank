@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/indicator/NY.GDP.PCAP.CD?format=json",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:11:16Z",
+  "notes": "Indicator metadata for GDP per capita (current US$). unit empty string; sourceNote has a missing space ('estimate.This')."
+}

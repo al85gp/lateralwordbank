@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/MEX;JPN/indicator/SI.POV.GINI?format=json&mrv=4",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:16:08Z",
+  "notes": "OUT-OF-SCOPE indicator (sparse). mrv=4 returns the 4 most recent years that have data for ANY requested country (2024, 2022, 2020, 2019) - not the last 4 calendar years - and returns null rows for countries without data in those years."
+}

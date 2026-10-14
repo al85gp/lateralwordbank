@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA;CAN;DEU;GBR;IND;JPN;MEX;USA;ZAF/indicator/SP.POP.TOTL?format=json&per_page=1000&date=2018:2024&source=2",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:42:41Z",
+  "notes": "Synthesis live check. Golden SP.POP.TOTL request with query params reordered (format, per_page, date, source). Cloudflare MISS but served by the origin-side cache: max-age=85148 and last-modified 01:21:50 (the golden fetch time), 0.13 s. Body byte-identical to the golden fixture and WITHOUT footnote keys, although a footnote=y request for the same path/date/per_page had been rendered 25 s earlier (t1). Shows the origin cache keyed this footnote difference correctly in this instance (contrast errors/burst_01_nine_countries_pop.json)."
+}

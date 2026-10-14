@@ -1,0 +1,11 @@
+HTTP/1.1 302 Found
+Date: Wed, 14 Oct 2026 01:12:52 GMT
+Content-Type: text/html; charset=UTF-8
+Content-Length: 143
+Connection: keep-alive
+set-cookie: __cf_bm=<redacted>; HttpOnly; Path=/; Domain=worldbank.org; Expires=Wed, 14 Oct 2026 01:42:52 GMT
+set-cookie: _cfuvid=<redacted>; HttpOnly; SameSite=None; Secure; Path=/; Domain=worldbank.org
+Location: https://api.worldbank.org/v2/country/BRA/indicator/SP.POP.TOTL?format=json&date=2018:2024
+Server: cloudflare
+CF-RAY: a4a2b7e05ec99120-ORD
+

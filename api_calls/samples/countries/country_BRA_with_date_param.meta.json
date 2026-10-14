@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/BRA?format=json&date=2018",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:15:01Z",
+  "notes": "Country endpoint with date=2018: tests whether a year can select a historical income classification."
+}

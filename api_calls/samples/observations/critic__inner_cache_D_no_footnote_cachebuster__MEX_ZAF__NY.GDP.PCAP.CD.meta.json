@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/MEX;ZAF/indicator/NY.GDP.PCAP.CD?source=2&format=json&date=2018:2024&per_page=1000&cb=critic20261014b",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:59:32Z",
+  "notes": "CRITIC (completeness pass). Step D: step-B URL + cb=critic20261014b. Fresh render (charset=utf-8, MISS, 1.06 s): the CORRECT body, 14 rows with no footnote key, values equal to step A. Here a cache-busted retry recovered from the substituted body (not guaranteed: see the ESP_PRT step H fixture and area 02 V24)."
+}

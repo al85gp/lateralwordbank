@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country?format=json&per_page=10&page=1",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:12:26Z",
+  "notes": "Full country list, page 1 of N with per_page=10. Shows aggregates mixed in with economies (e.g. AFE, AFW, ARB)."
+}

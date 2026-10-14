@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/country/MEX;JPN/indicator/SI.POV.GINI?format=json&mrv=4&gapfill=Y",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:16:10Z",
+  "notes": "OUT-OF-SCOPE indicator. mrv=4&gapfill=Y returns calendar years 2025-2022 with nulls replaced by carried-forward older values (e.g. JPN 2022-2024 = 32.3, which is really the 2020 value; MEX 2025 = 42.6 copied from 2024). obs_status stays empty, so fabricated values are indistinguishable. Pipeline must NOT use gapfill."
+}

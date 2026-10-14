@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/indicator/SP.POP.TOTL?format=json",
+  "http_status": 301,
+  "content_type": null,
+  "fetched_at_utc": "2026-10-14T01:13:32Z",
+  "notes": "301 redirect headers for an unversioned path; Location points at /v2/. set-cookie values redacted."
+}

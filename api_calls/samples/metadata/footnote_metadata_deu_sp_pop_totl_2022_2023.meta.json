@@ -1,0 +1,7 @@
+{
+  "url": "https://api.worldbank.org/v2/sources/2/footnote/DEU~SP.POP.TOTL~YR2022;DEU~SP.POP.TOTL~YR2023/metadata?format=json",
+  "http_status": 200,
+  "content_type": "application/json;charset=utf-8",
+  "fetched_at_utc": "2026-10-14T01:16:58Z",
+  "notes": "Footnote metadata: /sources/2/footnote/{ISO3}~{SERIES}~YR{yyyy}/metadata; semicolon-joined keys work. Value 'Break in series.' matches the footnote field of the data call with footnote=y."
+}
