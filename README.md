@@ -33,6 +33,14 @@ docker compose --profile test up test
 
 The second command keeps the test run as the `worldbank-tests` container. The `test` service sits behind a profile, so a plain `docker compose up` starts only the pipeline.
 
+**Dashboard.** A Streamlit page over the four reports runs as the `worldbank-dashboard` container, which stays running. Open http://localhost:8501 once it has started:
+
+```bash
+docker compose up -d --build dashboard
+```
+
+It reads the CSVs in `output/`, so it works on the committed sample output before any run. Refresh the page after a pipeline run to see new data. Stop it with `docker compose stop dashboard`.
+
 What you get:
 
 | Output | Contents |
@@ -84,7 +92,7 @@ python3.12 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt -c con
 | R-MOD-04, D-09 | Add a country or indicator by configuration | One list entry in `config/pipeline.yml` | `config.py` | `test_config_validation`, spine-completeness test |
 | D-01, D-02 | Missing data is an outcome, not zero | Spine-based fact with `value_status` | `fct_indicator_year` | `accepted_values`, `assert_spine_complete` |
 | R-ANL-01 – R-ANL-04 | The four analytics questions | One dbt view each, exported to CSV | `dbt/models/reporting/`, `output/` | `test_end_to_end`, `assert_yoy_change_matches_status`, `assert_income_groups_reconcile` |
-| R-ANL-05 | *Optional* extra view or dashboard | Not built; CSV-only output (see Trade-offs) | — | — |
+| R-ANL-05 | *Optional* extra view or dashboard | Streamlit dashboard over the four reports: coverage, year-over-year, latest year, income groups | `dashboard/app.py`, `docker-compose.yml` | `test_dashboard_*` |
 | R-DQ-01 | Correctness and safe reprocessing | dbt tests on every run, pytest suite | `dbt/tests/`, `tests/` | Data quality and tests section |
 | R-DQ-02, D-06 | Related indicators consistent | GDP per capita within 1% of GDP ÷ population | Singular dbt test (warn) | `test_consistency_warning_does_not_block_export`; warning rows in the run output |
 | R-DQ-03, D-10 | Tests never call the live API | `requests-mock` with recorded fixtures; the `test` service has no network | `tests/`, `docker-compose.yml` | Any live call fails the suite |
@@ -114,6 +122,8 @@ World Bank API v2              config/pipeline.yml
    reporting  (dbt views)       one view per analytics question
                         ▼
    output/*.csv                 swapped in only after dbt build passes
+                        ▼
+   dashboard  (Streamlit)       reads output/*.csv read-only; http://localhost:8501
 ```
 
 One Compose service, `pipeline`, runs the dlt extract and load, then `dbt build`, then the CSV export, and stops at the first failure with a non-zero exit code. `data/` and `output/` are mounted from the host, so the warehouse and the CSVs outlive the container.
@@ -132,6 +142,7 @@ lateralwordbank/
 ├── docker-compose.yml        # project lateralwordbank: pipeline, test (profile test, network_mode: none); mounts data/ and output/
 ├── requirements.txt          # dlt[duckdb], duckdb, dbt-core, dbt-duckdb, pyyaml (pinned)
 ├── requirements-dev.txt      # pytest, requests-mock (pinned)
+├── requirements-dashboard.txt # streamlit (pinned)
 ├── constraints.txt           # every transitive version, pinned
 ├── pytest.ini
 ├── config/
@@ -153,6 +164,8 @@ lateralwordbank/
 │   │   ├── marts/            # dim_country, dim_indicator, fct_indicator_year
 │   │   └── reporting/        # the four rpt_* views
 │   └── tests/                # singular SQL tests
+├── dashboard/
+│   └── app.py                # Streamlit page over output/*.csv
 ├── tests/
 │   ├── fixtures/             # recorded API pages for every canonical URL, with .meta.json sidecars
 │   ├── conftest.py           # fake API serving the fixtures; per-test workspace
@@ -403,7 +416,7 @@ The consistency checks warn rather than fail: the source revises indicators on d
 
 `requests-mock` intercepts every HTTP call dlt makes and serves JSON from `tests/fixtures/`, recorded once from the live API. The fixtures are the exact canonical URLs a real run sends: the country call plus pages 1 and 2 at `per_page=50` for all four indicators, copied from `api_calls/samples/pagination/`. Joined, the two pages of each indicator match the single-page golden recordings in `api_calls/samples/observations/` value for value. Integration tests run the dlt pipeline into a temporary DuckDB file and call `dbt build` through dbt's Python runner, with dlt's retry delays set to zero. The `test` service runs with `network_mode: none`, so any accidental live call fails the suite.
 
-57 tests in four files. Names below are prefixes; each covers several cases.
+64 tests in five files. Names below are prefixes; each covers several cases.
 
 | Test | File | Proves |
 | --- | --- | --- |
@@ -421,6 +434,7 @@ The consistency checks warn rather than fail: the source revises indicators on d
 | `test_bad_data_blocks_export` | `test_pipeline.py` | A duplicate page seeded into raw fails `assert_no_duplicate_api_records`; `output/` stays byte-identical |
 | `test_consistency_warning_does_not_block_export` | `test_pipeline.py` | GDP per capita 5% off for one country-year logs the `warn` test with its row, and the CSVs are still written |
 | `test_rebuild_rejects_an_unknown_load` | `test_pipeline.py` | `rebuild` with a load id that is not a completed load fails with a clear message |
+| `test_dashboard_*` | `test_dashboard.py` | Streamlit's `AppTest` renders the dashboard without a browser. All four tabs and every indicator render from the CSVs of a real pipeline run on the recorded responses. A missing value is counted as missing and listed with its status. With no reports, the page says how to create them |
 
 The suite can fail: with the `indicator.id` check in `source.py` disabled on purpose, three tests fail, including both `test_wrong_body_retry` tests that expect a wrong body to be rejected.
 
@@ -444,6 +458,7 @@ The suite can fail: with the `indicator.id` check in `source.py` disabled on pur
 | Latest year per country (D-04) | The latest year every country reports | The requirements rule; `years_behind` shows when countries are compared across different years |
 | YoY on a zero prior keeps `abs_change` (D-03) | Null both changes | The requirements rule; the absolute change is well defined, only the percentage is not |
 | 90 s HTTP timeout | 30 s | An uncached response from the API took 45 s |
+| Dashboard in its own Docker stage | Install Streamlit into the pipeline image | The pipeline image stays 713 MB and unchanged; the dashboard needs none of dlt or dbt |
 | Raw `body` as text | dlt's `json` column type | `json` re-serializes the body, so its bytes would no longer match `body_sha256`; text keeps them exact, and DuckDB's JSON functions still read it |
 | One `stg_wb__selected_load` model that every staging model joins to | Repeat the "latest completed load" filter in each model | One place decides which load is built; `rebuild --load-id` only changes a dbt var |
 | A cache-busted retry counter per canonical URL for the whole run | A counter per page fetch | A restart from page 1 also gets fresh tokens, and the attempt budget still bounds the total requests |
@@ -479,7 +494,8 @@ The suite can fail: with the `indicator.id` check in `source.py` disabled on pur
 | dbt-core, no packages | `ref()` ordering, built-in tests, generated docs | `dbt build` is not transactional; a failing test leaves rebuilt tables, so CSVs are swapped in only on green |
 | DuckDB | No server, one file | One writer at a time |
 | Docker Compose | Identical environment, one command | The reviewer needs Docker |
-| CSV reports only | Open anywhere, diff in git, double as sample output | No interactive view |
+| CSV reports plus a Streamlit page over them | CSVs open anywhere, diff in git and double as sample output; the page adds charts and filters | The dashboard image is 779 MB (Streamlit brings pandas, pyarrow and altair), and the test image grows from 718 MB to 1.28 GB to include Streamlit for the dashboard tests |
+| Dashboard reads `output/*.csv`, not DuckDB | Never shows a half-built state; never holds the warehouse lock, since DuckDB allows one writer and a dashboard holding the file open would block the next pipeline run | Shows only what the reports contain; refresh the page after a run |
 | Raw stores full bodies | Exact traceability and replay | Raw grows each run; production needs a retention rule |
 | Full re-pull every run | Simple and always consistent | Redundant requests, harmless at this volume |
 | Consistency checks warn | Reports ship despite revision timing | A real error needs someone to read the warning |
@@ -518,6 +534,7 @@ The suite can fail: with the `indicator.id` check in `source.py` disabled on pur
 | Local | Snowflake + AWS | Azure |
 | --- | --- | --- |
 | Docker image | ECR image on ECS Fargate, or the dlt source as a Glue Python shell job; EMR is overkill at this volume | ACR image on Azure Container Apps jobs |
+| Streamlit dashboard container | Streamlit in Snowflake over the reporting views, or the same image as an ECS service | The same image on Azure Container Apps |
 | dlt into DuckDB `raw` | dlt's Snowflake destination writing the same raw tables, or dlt to S3 loaded by Snowpipe into a VARIANT table | dlt into Snowflake on Azure, or to ADLS Gen2 behind an external stage |
 | dbt-duckdb | dbt-snowflake, same models; JSON paths move to `:` syntax and `FLATTEN` | Same |
 | CSV swap after a green build | Staging schema plus `ALTER SCHEMA ... SWAP WITH` | Same |
@@ -539,12 +556,14 @@ The suite can fail: with the `indicator.id` check in `source.py` disabled on pur
 | Reporting | The four `rpt_*` views, the year-over-year and income-group reconciliation tests, the CSV export (Claude) | | |
 | pytest | `conftest.py` with the fake API, 57 tests across four files (Claude) | | |
 | README | The sections filled in from the live run and test results: quick start timing, observed API behavior, dropped fields, report summaries, test tables, decisions (Claude) | | |
+| Dashboard | `dashboard/app.py`, the `dashboard` Docker stage and Compose service, `test_dashboard.py` (Claude) | | |
 
 Checks Claude ran while drafting:
 
 - Live runs against the API, with every page accepted on the first attempt.
 - `dbt build`: PASS=88, plus one deliberate failure, which showed that a failing build leaves `output/` untouched.
-- 57 pytest tests, passing locally and in the Docker `test` service with no network.
+- 57 pytest tests, passing locally and in the Docker `test` service with no network. With the dashboard tests, the suite is now 64.
+- The dashboard container shown healthy, and all four tabs checked in a browser.
 - A mutation check: the indicator check disabled on purpose, with three tests failing.
 - The documented commands run from a fresh clone.
 - Raw data checked directly: the empty `unit`, USA GDP's int tokens and the 1e-15 consistency margin were confirmed by querying raw.
@@ -558,7 +577,6 @@ Checks Claude ran while drafting:
 
 Not built:
 
-- **R-ANL-05, the optional dashboard.** The CSVs and `data/warehouse.duckdb` are the reporting layer. A small Evidence or Streamlit page over the four views would be the next step.
 - **Historical income classifications.** The v2 API returns only the current group (D-05). The World Bank's historical classification file (OGHIST) could become a seed with a `year` column, joined in `rpt_income_group_by_year`.
 - **A live check of a cache-buster recovery.** No wrong body occurred in the live runs, so that path is covered by tests on recorded wrong bodies only.
 

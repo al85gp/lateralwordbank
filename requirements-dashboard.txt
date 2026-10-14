@@ -1,0 +1,3 @@
+# Dashboard only (R-ANL-05). Reads output/*.csv; needs none of the pipeline's packages.
+# Transitive versions are pinned in constraints.txt.
+streamlit==1.65.0

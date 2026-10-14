@@ -28,3 +28,19 @@ services:
     container_name: worldbank-tests
     user: "${UID:-1000}:${GID:-1000}"
     network_mode: none
+
+  # docker compose up -d --build dashboard  -> http://localhost:8501, keeps running ("worldbank-dashboard")
+  # Reads the reports in output/; refresh the page after a pipeline run to see new data.
+  dashboard:
+    profiles: [dashboard]  # not started by a plain `docker compose up`
+    build:
+      context: .
+      target: dashboard
+    image: wb-dashboard:local
+    container_name: worldbank-dashboard
+    user: "${UID:-1000}:${GID:-1000}"
+    ports:
+      - "127.0.0.1:8501:8501"  # this machine only
+    volumes:
+      - ./output:/app/output:ro
+    restart: unless-stopped
