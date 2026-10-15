@@ -32,6 +32,6 @@ On the committed output all 13 checks pass. `test_reconcile_*` runs the command 
 What the committed CSVs show (live run, source updated 2026-10-08):
 
 - **`rpt_missing_or_incomplete`:** a header only. All 252 requested values were reported.
-- **`rpt_yoy_change`:** 216 `ok` rows and 36 `first_year_in_scope` rows (2018). The largest falls are Brazil's GDP and GDP per capita in 2020 (about −21%). The largest rise is South Africa's GDP in 2021 (+24%).
+- **`rpt_yoy_change`:** 216 `ok` rows and 36 `first_year_in_scope` rows (2018). The largest falls are Brazil's GDP per capita and GDP in 2020 (about −22% and −21%). The largest rise is South Africa's GDP in 2021 (+24%).
 - **`rpt_latest_comparison`:** every country's latest year is 2024, so `years_behind` is 0 everywhere. India ranks first for population, the USA for GDP and GDP per capita, and Japan for life expectancy.
 - **`rpt_income_group_by_year`:** 84 rows (4 indicators × 3 groups × 7 years), all complete. In 2024, GDP per capita, weighted by population, was about $67,000 for high income, $10,900 for upper middle income and $2,600 for lower middle income.

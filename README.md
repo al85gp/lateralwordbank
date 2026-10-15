@@ -84,9 +84,9 @@ World Bank API v2  ──►  dlt source        page loop, response validation, 
 
 1. **dlt for ingestion, with our own page loop.** dlt brings HTTP retries with backoff, atomic load packages and a load log. dlt's paginators can't reject an HTTP 200 page and fetch it again from a different URL, so `source.py` drives the paging itself.
 2. **Every HTTP 200 body is checked against its request.** While mapping the API (`api_calls/`), it sometimes returned another query's cached body with HTTP 200. Each page is therefore checked for its indicator, countries, years, page number, source and row count. A rejected page is fetched again with a fresh cache-buster (`&cb=<load_id>-<attempt>`), because the same URL returns the same cached bytes.
-3. **Raw keeps every response body exactly as received.** It is stored as text, so `sha256(body)` matches the stored hash. Every fact carries `request_url`, `body_sha256` and `record_index`, which point to the exact JSON record behind it ([docs/ingestion.md](docs/ingestion.md#traceability)).
+3. **Raw keeps every response body exactly as received.** It is stored as text, so `sha256(body)` matches the stored hash. Every fact the API returned carries `request_url`, `body_sha256` and `record_index`, which point to the exact JSON record behind it; a `not_returned` fact has nothing to point to ([docs/ingestion.md](docs/ingestion.md#traceability)).
 4. **The fact table is the full requested spine.** It has one row per country × indicator × year in scope, 252 rows here, so a missing value is a row with `value_status` (`reported`, `null_in_source` or `not_returned`), never an absent row or a 0.
-5. **One load at a time, and reruns change nothing.** Raw is append-only. The marts are rebuilt from one completed load, with `unique` tests on every grain. A rerun on unchanged data gives identical facts and byte-identical CSVs.
+5. **One load at a time, and a rerun creates no duplicates.** Raw is append-only, so a rerun adds a load there. The marts are rebuilt from one completed load, with `unique` tests on every grain, so a rerun on unchanged data gives the same facts (only `load_id` changes) and byte-identical CSVs.
 6. **The rules in `requirements.md` decide the report logic.** "Latest available year" is each country's own latest reported year (D-04). A prior value of 0 keeps the absolute change and gives no percentage (D-03).
 7. **Checks at every layer.** dbt runs 77 tests on every build, and an `error` test stops the export. 66 pytest tests replay recorded API responses with no network, and CI runs them on every push. `reconcile` checks the exported files against their source tables.
 8. **One command in Docker.** The same image runs locally and in CI, and the pinned `constraints.txt` fixes every package version.
@@ -112,12 +112,12 @@ Columns, staging models and standardization are in [docs/data-model.md](docs/dat
 | Countries at the latest year | `rpt_latest_comparison` | Each country at its own latest reported year, ranked, with `years_behind` |
 | Income groups by year | `rpt_income_group_by_year` | `sum` or population-weighted mean per config, with coverage columns |
 
-On the committed data, all 252 values were reported, so the missing-data report has only a header. The largest year-over-year fall is Brazil's GDP in 2020 (about −21%). Every country's latest year is 2024. More findings and the full logic are in [docs/reports.md](docs/reports.md).
+On the committed data, all 252 values were reported, so the missing-data report has only a header. The largest year-over-year falls are Brazil's GDP per capita and GDP in 2020 (about −22% and −21%). Every country's latest year is 2024. More findings and the full logic are in [docs/reports.md](docs/reports.md).
 
 ### Data quality and tests
 
-- **dbt tests on every build: 77.** Unique grains, relationships and accepted values on every model, and lineage that resolves to the raw record. Spine completeness and plausible ranges. Year-over-year numbers that match their status, and income groups that add up. GDP per capita checked against GDP ÷ population, as a warning.
-- **pytest, offline: 66.** Paging, HTTP retries, API error bodies, every validation rule, wrong-body recovery, idempotent reruns, corrections and replays, failures that leave `output/` untouched, the dashboard, and `reconcile`.
+- **dbt tests on every build: 77.** A unique grain on every model, relationships from the fact to both dimensions, accepted values on the status, aggregation and source columns, and lineage that resolves to the raw record. Spine completeness and plausible ranges. Year-over-year numbers that match their status, and income groups that add up. GDP per capita checked against GDP ÷ population, as a warning.
+- **pytest, offline: 66.** Paging, HTTP retries, API error bodies, the response validation rules, wrong-body recovery, idempotent reruns, corrections and replays, failures that leave `output/` untouched, the dashboard, and `reconcile`.
 - **CI** runs `docker compose run --rm test` on every push.
 
 The full test lists and a by-hand verification checklist are in [docs/testing.md](docs/testing.md).
@@ -156,11 +156,12 @@ The full test lists and a by-hand verification checklist are in [docs/testing.md
 In production the same code would run under **[Dagster](https://dagster.io)**, which is open source and self-hosted. `dagster-dlt` and `dagster-dbt` wrap the dlt source and the dbt project as assets, and every dbt test becomes an asset check. The CSV export becomes an asset too, with `reconcile` as a check on it. The full version of this note is in [docs/production.md](docs/production.md).
 
 **Scheduling and incremental refreshes (R-PRD-01)**
-- A daily Dagster schedule runs the job. A sensor first makes one cache-busted request to `/v2/source/2` and starts a run only when the source's `lastupdated` has moved.
+- Once a day, a Dagster sensor makes one cache-busted request to `/v2/source/2` and starts the job only when the source's `lastupdated` has moved, so most days cost one request instead of nine.
 - At nine requests a full re-pull is cheaper than incremental logic. At hundreds of indicators, the indicators become partitions, and only partitions whose `lastupdated` moved are refreshed, plus a monthly full pull.
 - A concurrency limit of one run keeps a single writer on the warehouse.
 
 **Late, corrected or changed source data (R-PRD-02)**
+- **Late values:** a value not yet published is a `not_returned` or `null_in_source` row, listed in `rpt_missing_or_incomplete`. When the World Bank publishes it, `lastupdated` moves, the sensor starts a run, and the row becomes `reported` with that load's lineage. Nothing is patched in place.
 - The API overwrites history. Raw keeps every response body per load, so every revision survives.
 - Next: a dbt snapshot on `fct_indicator_year` and a `rpt_revisions` view of values that changed between loads, with a threshold check.
 - A value that goes from reported to null shows as `null_in_source`; it is never silently kept.
