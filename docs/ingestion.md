@@ -86,7 +86,7 @@ What the live runs showed:
 
 ### Traceability
 
-1. Every staging, mart and reporting row carries `load_id`, `request_url`, `body_sha256` and `record_index`, the record's position in that page's data array.
+1. Every staged observation and country record, and every fact the API returned, carries `load_id`, `request_url`, `body_sha256` and `record_index`, the record's position in that page's data array. The three row-level reports carry `request_url`, `body_sha256` and `record_index`, but not `load_id`, so their CSVs don't change on a rerun. The dimensions and the income-group aggregate carry none.
 2. `raw.api_responses` holds the verbatim body for that load and URL, so element `record_index` of the body's data array is the exact JSON object behind the value.
 3. `request_url` is the canonical URL from the Calls table. It is the same for every load and every attempt, which makes it the join key and keeps lineage stable across runs.
 4. `fetched_url` is the URL actually sent for the accepted body. It equals `request_url` when `attempt = 1`. On a retry it is `request_url` plus `&cb=<load_id>-<attempt>`, so raw shows exactly which request produced the stored bytes.
