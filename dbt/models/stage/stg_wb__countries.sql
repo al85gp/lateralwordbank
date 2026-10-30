@@ -1,4 +1,4 @@
--- One row per country record in the selected load's country response.
+-- One row per country record per load, from each load's country response.
 with pages as (
     select
         responses._dlt_load_id as load_id,
@@ -6,8 +6,8 @@ with pages as (
         responses.body_sha256,
         responses.body
     from {{ source('raw', 'api_responses') }} as responses
-    inner join {{ ref('stg_wb__selected_load') }} as selected
-        on responses._dlt_load_id = selected.load_id
+    inner join {{ ref('stg_wb__loads') }} as loads
+        on responses._dlt_load_id = loads.load_id
     where responses.endpoint = 'country'
 ),
 

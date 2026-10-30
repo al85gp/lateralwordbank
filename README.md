@@ -41,7 +41,7 @@ Other commands:
 
 | Command | What it does |
 | --- | --- |
-| `docker compose run --rm test` | Every test (66), in a container with no network |
+| `docker compose run --rm test` | Every test (71), in a container with no network |
 | `docker compose run --rm pipeline loads` | Lists the completed loads |
 | `docker compose run --rm pipeline rebuild --load-id <id>` | Rebuilds the models and CSVs from a stored load, with no API calls |
 | `docker compose run --rm pipeline reconcile` | After a run: checks the CSVs against the warehouse and the raw API responses (13 checks) |
@@ -71,11 +71,11 @@ World Bank API v2  ──►  dlt source        page loop, response validation, 
                               ▼
                         raw (DuckDB)      every response body exactly as received, append-only
                               ▼
-                        dbt staging       one load, parsed, typed, ISO3 keys
+                        stage (dbt)       every completed load, parsed, typed, ISO3 keys
                               ▼
-                        dbt marts         dim_country, dim_indicator, fct_indicator_year
-                              ▼
-                        dbt reporting     one view per analytics question
+                        gold (dbt)        dim_country, dim_indicator, and fct_indicator_year,
+                                          which each run MERGEs into on its grain;
+                                          one report view per analytics question
                               ▼
                         output/*.csv      replaced only after dbt build and its tests pass
 ```
@@ -86,9 +86,9 @@ World Bank API v2  ──►  dlt source        page loop, response validation, 
 2. **Every HTTP 200 body is checked against its request.** While mapping the API (`api_calls/`), it sometimes returned another query's cached body with HTTP 200. Each page is therefore checked for its indicator, countries, years, page number, source and row count. A rejected page is fetched again with a fresh cache-buster (`&cb=<load_id>-<attempt>`), because the same URL returns the same cached bytes.
 3. **Raw keeps every response body exactly as received.** It is stored as text, so `sha256(body)` matches the stored hash. Every fact the API returned carries `request_url`, `body_sha256` and `record_index`, which point to the exact JSON record behind it; a `not_returned` fact has nothing to point to ([docs/ingestion.md](docs/ingestion.md#traceability)).
 4. **The fact table is the full requested spine.** It has one row per country × indicator × year in scope, 252 rows here, so a missing value is a row with `value_status` (`reported`, `null_in_source` or `not_returned`), never an absent row or a 0.
-5. **One load at a time, and a rerun creates no duplicates.** Raw is append-only, so a rerun adds a load there. The marts are rebuilt from one completed load, with `unique` tests on every grain, so a rerun on unchanged data gives the same facts (only `load_id` changes) and byte-identical CSVs.
+5. **Medallion layers, and a `MERGE` into the fact.** `raw` (dlt, append-only) → `stage` (dbt views over every completed load) → `gold` (dimensions, fact, report views). `fct_indicator_year` is a dbt incremental model with `incremental_strategy='merge'` on (`country_iso3`, `indicator_code`, `year`): a run merges only its own load, updating the keys it requested and inserting new ones, so widening `config/pipeline.yml` adds rows and narrowing it drops none. `rebuild` is a `--full-refresh` that replays every load in order, the latest winning each key, and gives the same table. A rerun on unchanged data gives the same facts (only the load ids change) and byte-identical CSVs.
 6. **The rules in `requirements.md` decide the report logic.** "Latest available year" is each country's own latest reported year (D-04). A prior value of 0 keeps the absolute change and gives no percentage (D-03).
-7. **Checks at every layer.** dbt runs 77 tests on every build, and an `error` test stops the export. 66 pytest tests replay recorded API responses with no network, and CI runs them on every push. `reconcile` checks the exported files against their source tables.
+7. **Checks at every layer.** dbt runs 82 tests on every build, and an `error` test stops the export. 71 pytest tests replay recorded API responses with no network, and CI runs them on every push. `reconcile` checks the exported files against their source tables.
 8. **One command in Docker.** The same image runs locally and in CI, and the pinned `constraints.txt` fixes every package version.
 
 All decisions, with the alternative considered for each, are in [docs/decisions.md](docs/decisions.md).
@@ -101,7 +101,7 @@ All decisions, with the alternative considered for each, are in [docs/decisions.
 | `dim_country` | Country | `country_iso3` | One to many with the fact |
 | `dim_indicator` | Indicator | `indicator_code` | One to many with the fact |
 
-Columns, staging models and standardization are in [docs/data-model.md](docs/data-model.md).
+Columns, stage models and standardization are in [docs/data-model.md](docs/data-model.md).
 
 ### Reports
 
@@ -116,8 +116,8 @@ On the committed data, all 252 values were reported, so the missing-data report 
 
 ### Data quality and tests
 
-- **dbt tests on every build: 77.** A unique grain on every model, relationships from the fact to both dimensions, accepted values on the status, aggregation and source columns, and lineage that resolves to the raw record. Spine completeness and plausible ranges. Year-over-year numbers that match their status, and income groups that add up. GDP per capita checked against GDP ÷ population, as a warning.
-- **pytest, offline: 66.** Paging, HTTP retries, API error bodies, the response validation rules, wrong-body recovery, idempotent reruns, corrections and replays, failures that leave `output/` untouched, the dashboard, and `reconcile`.
+- **dbt tests on every build: 82.** A unique grain on every model, relationships from the fact to both dimensions, accepted values on the status, aggregation and source columns, and lineage that resolves to the raw record. Spine completeness and plausible ranges. Year-over-year numbers that match their status, and income groups that add up. GDP per capita checked against GDP ÷ population, as a warning.
+- **pytest, offline: 71.** Paging, HTTP retries, API error bodies, the response validation rules, wrong-body recovery, idempotent reruns, an end-to-end check of null and missing values against an independent oracle, merges that widen or narrow the scope, corrections and replays, failures that leave `output/` untouched, the dashboard, and `reconcile`.
 - **CI** runs `docker compose run --rm test` on every push.
 
 The full test lists and a by-hand verification checklist are in [docs/testing.md](docs/testing.md).
@@ -205,7 +205,7 @@ I chose the stack and made the design decisions. I used Claude (Anthropic) in Cl
 - **How I verified:**
   - the documented commands from a fresh clone;
   - live runs, all checks passing;
-  - the 66 tests, locally and in Docker without network;
+  - the 71 tests, locally and in Docker without network;
   - `reconcile` against the committed CSVs;
   - a deliberately broken check, to see that the tests catch it.
 
@@ -215,7 +215,6 @@ The step-by-step record, with what was drafted and what I changed at each step, 
 
 ## Next steps
 
-- **An end-to-end missing-data test.** The live data has no missing values. A test that sends a null and a missing record through dlt, dbt and every report would exercise the paths the brief cares most about.
 - **Restore after a failed build.** A load that fails a dbt test never reaches `output/`, but the warehouse keeps it until `rebuild --load-id <last good load>`. Next is to record which load is published and rebuild it automatically after a failure.
 - **The Dagster project** described above: a thin layer over the existing code.
 - **Historical income classifications,** from the World Bank's OGHIST file as a dbt seed.

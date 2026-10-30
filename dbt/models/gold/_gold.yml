@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: dim_country
-    description: One row per country in scope. One to many with fct_indicator_year.
+    description: One row per country any load up to the selected one returned, from the latest such load. One to many with fct_indicator_year.
     columns:
       - name: country_iso3
         description: ISO3 code, the business key.
@@ -23,7 +23,7 @@ models:
         data_tests: [not_null]
 
   - name: dim_indicator
-    description: One row per indicator in scope. One to many with fct_indicator_year.
+    description: One row per indicator any load up to the selected one requested, from the latest such load. One to many with fct_indicator_year.
     columns:
       - name: indicator_code
         description: World Bank indicator code, the business key.
@@ -45,8 +45,10 @@ models:
 
   - name: fct_indicator_year
     description: >
-      One row per requested country x indicator x year, so 9 x 4 x 7 = 252 rows with the default
-      config. Many to one with dim_country and dim_indicator. A missing value is a row with
+      One row per country x indicator x year that any load up to the selected one requested, so
+      9 x 4 x 7 = 252 rows with the default config. Incremental: each run merges the new load on
+      the grain, so a wider scope adds rows and keys the run did not request keep their last value.
+      Many to one with dim_country and dim_indicator. A missing value is a row with
       `value_status`, never an absent row and never 0.
     data_tests:
       - unique:
@@ -88,8 +90,11 @@ models:
         description: The API's `decimal`, passed through.
       - name: source_last_updated
         description: The API's `lastupdated` for the indicator's source.
+      - name: scope_load_id
+        description: The latest load that requested this key, so the one that last merged it.
+        data_tests: [not_null]
       - name: load_id
-        description: Lineage, the load; null only when `not_returned`.
+        description: Lineage, the load the value came from; null only when `not_returned`.
       - name: request_url
         description: Lineage, the canonical URL of the page; null only when `not_returned`.
       - name: body_sha256

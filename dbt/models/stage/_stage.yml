@@ -3,7 +3,7 @@ version: 2
 models:
   - name: stg_wb__selected_load
     description: >
-      The single load the rest of the project reads: the `load_id` var when set
+      The load a build runs up to: the `load_id` var when set
       (`python -m wb_pipeline rebuild --load-id`), else the latest completed load.
     columns:
       - name: load_id
@@ -13,11 +13,26 @@ models:
         description: When dlt completed the load.
         data_tests: [not_null]
 
+  - name: stg_wb__loads
+    description: >
+      Every completed load up to and including the selected one. Stage reads these loads; an
+      incremental build of gold merges only the selected one.
+    columns:
+      - name: load_id
+        description: The dlt load id.
+        data_tests: [not_null, unique]
+      - name: inserted_at
+        description: When dlt completed the load; orders loads, so the latest one wins a key.
+        data_tests: [not_null]
+      - name: is_selected
+        description: True for the selected load only.
+        data_tests: [not_null]
+
   - name: stg_wb__scope
-    description: The requested spine of the selected load, from raw.run_scope. One row per country x indicator x year.
+    description: The requested spine of each load, from raw.run_scope. One row per load x country x indicator x year.
     data_tests:
       - unique:
-          column_name: "concat_ws('|', country_iso3, indicator_code, year)"
+          column_name: "concat_ws('|', load_id, country_iso3, indicator_code, year)"
     columns:
       - name: country_iso3
         description: Requested country, ISO3.
@@ -38,15 +53,18 @@ models:
               arguments:
                 values: [sum, population_weighted_mean]
       - name: load_id
-        description: The selected load.
+        description: The load that requested this row.
         data_tests: [not_null]
 
   - name: stg_wb__countries
-    description: One row per country record in the selected load's country response, flattened.
+    description: One row per country record per load, from its country response, flattened.
+    data_tests:
+      - unique:
+          column_name: "concat_ws('|', load_id, country_iso3)"
     columns:
       - name: country_iso3
         description: ISO3 code (the API's `id`), the country key everywhere.
-        data_tests: [not_null, unique]
+        data_tests: [not_null]
       - name: iso2_code
         description: ISO2 code (the API's `iso2Code`).
         data_tests: [not_null]
@@ -76,11 +94,11 @@ models:
 
   - name: stg_wb__observations
     description: >
-      One row per observation record in the selected load's indicator responses: ISO3 key,
+      One row per observation record per load, from its indicator responses: ISO3 key,
       integer year, DOUBLE value (null when the API sent null), nested objects flattened.
     data_tests:
       - unique:
-          column_name: "concat_ws('|', country_iso3, indicator_code, year)"
+          column_name: "concat_ws('|', load_id, country_iso3, indicator_code, year)"
     columns:
       - name: country_iso3
         description: ISO3 code (the API's `countryiso3code`).

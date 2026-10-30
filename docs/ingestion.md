@@ -63,7 +63,7 @@ Retrying a rejected HTTP 200 body:
 How a failure plays out:
 
 - An exception during extract stops `pipeline.run()` before load, so nothing is written.
-- A failure inside dlt's load step can leave rows behind, but without a completed entry in `_dlt_loads`; staging reads completed loads only (`status = 0`).
+- A failure inside dlt's load step can leave rows behind, but without a completed entry in `_dlt_loads`; stage reads completed loads only (`status = 0`).
 - Each run first discards any load package a crashed run left behind (`pipeline.abort_packages()`), so it can never be loaded later.
 - The process exits non-zero with the innermost error, and `output/` keeps the last good CSVs.
 
@@ -100,7 +100,7 @@ Lineage query for any value:
 select f.country_iso3, f.indicator_code, f.year, f.value,
        r.request_url, r.fetched_url, r.attempt, r.fetched_at,
        json_extract(r.body, '$[1][' || f.record_index || ']') as source_record
-from marts.fct_indicator_year f
+from gold.fct_indicator_year f
 join raw.api_responses r
   on r._dlt_load_id = f.load_id and r.request_url = f.request_url
 where f.country_iso3 = 'BRA' and f.indicator_code = 'SP.POP.TOTL' and f.year = 2023;
@@ -108,4 +108,4 @@ where f.country_iso3 = 'BRA' and f.indicator_code = 'SP.POP.TOTL' and f.year = 2
 
 ### Idempotency
 
-Raw is append-only: a rerun adds one load and about nine page rows. dbt rebuilds the marts as tables from the latest completed load, with `unique` tests on every grain, so unchanged source data produces identical facts. An unchanged `body_sha256` shows the source did not move. A run that needed cache-buster retries produces the same facts too: marts and CSVs carry the canonical `request_url`, never `fetched_url`. `test_idempotent_rerun` runs the pipeline twice and compares the fact table and the CSV bytes.
+Raw is append-only: a rerun adds one load and about nine page rows. dbt merges the new load into `gold.fct_indicator_year` on its grain, with `unique` tests on every grain, so unchanged source data produces identical facts and no duplicates. An unchanged `body_sha256` shows the source did not move. A run that needed cache-buster retries produces the same facts too: gold and the CSVs carry the canonical `request_url`, never `fetched_url`. `test_idempotent_rerun` runs the pipeline twice and compares the fact table and the CSV bytes.

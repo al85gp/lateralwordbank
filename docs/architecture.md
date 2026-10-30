@@ -15,11 +15,10 @@ World Bank API v2              config/pipeline.yml
                         ▼
    raw  (DuckDB dataset)        raw.api_responses, raw.run_scope, raw._dlt_loads; append-only
                         ▼
-   staging  (dbt views)         one completed load (latest, or --load-id); parse, flatten, cast
+   stage  (dbt views)           every completed load up to the latest (or --load-id); parse, flatten, cast
                         ▼
-   marts  (dbt tables)          dim_country, dim_indicator, fct_indicator_year
-                        ▼
-   reporting  (dbt views)       one view per analytics question
+   gold  (dbt)                  dim_country, dim_indicator (tables); fct_indicator_year (incremental,
+                                MERGE on the grain); one report view per analytics question
                         ▼
    output/*.csv                 swapped in only after dbt build passes
                         ▼
@@ -53,16 +52,16 @@ lateralwordbank/
 │   ├── config.py             # load + validate pipeline.yml
 │   ├── source.py             # dlt source: page loop, resources, response validation, cache-buster retries
 │   ├── pipeline.py           # extract and load, dbt build, export, in order; rebuild; list loads
-│   ├── export.py             # reporting views to output/.staging, moved into output/ on green
+│   ├── export.py             # gold report views to output/.staging, moved into output/ on green
 │   └── reconcile.py          # output/*.csv checked against the views, the fact table and raw
 ├── dbt/
-│   ├── dbt_project.yml       # schemas staging, marts, reporting; failing test rows kept in dq
+│   ├── dbt_project.yml       # schemas stage, gold; failing test rows kept in dq
 │   ├── profiles.yml          # duckdb at $WAREHOUSE_PATH
 │   ├── macros/generate_schema_name.sql
 │   ├── models/
-│   │   ├── staging/          # stg_wb__selected_load, stg_wb__scope, stg_wb__countries, stg_wb__observations
-│   │   ├── marts/            # dim_country, dim_indicator, fct_indicator_year
-│   │   └── reporting/        # the four rpt_* views
+│   │   ├── stage/            # stg_wb__selected_load, stg_wb__loads, stg_wb__scope, stg_wb__countries, stg_wb__observations
+│   │   └── gold/             # dim_country, dim_indicator, fct_indicator_year
+│   │       └── reports/      # the four rpt_* views
 │   └── tests/                # singular SQL tests
 ├── dashboard/
 │   └── app.py                # Streamlit page over output/*.csv

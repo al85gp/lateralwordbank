@@ -60,7 +60,7 @@ class Paths:
 
 
 def run(config: PipelineConfig, paths: Paths) -> str:
-    """Extract and load, then build and export from that load. Returns the load id."""
+    """Extract and load, then merge that load into gold and export. Returns the load id."""
     load_id = extract_load(config, paths)
     build(paths, load_id)
     export(paths)
@@ -68,13 +68,14 @@ def run(config: PipelineConfig, paths: Paths) -> str:
 
 
 def rebuild(paths: Paths, load_id: str | None = None) -> str:
-    """Rebuild every model and the CSVs from raw alone: no API calls."""
+    """Rebuild every model and the CSVs from raw alone, no API calls: a full refresh of gold that
+    replays every completed load up to `load_id`, the latest load winning each key."""
     load_id = load_id or latest_load_id(paths)
     if not LOAD_ID.match(load_id):
         raise PipelineError(f"{load_id!r} is not a load id; list them with: python -m wb_pipeline loads")
     if load_id not in {row[0] for row in list_loads(paths)}:
         raise PipelineError(f"load {load_id} is not a completed load; list them with: python -m wb_pipeline loads")
-    build(paths, load_id)
+    build(paths, load_id, full_refresh=True)
     export(paths)
     return load_id
 
@@ -99,8 +100,9 @@ def extract_load(config: PipelineConfig, paths: Paths) -> str:
     return load_id
 
 
-def build(paths: Paths, load_id: str) -> None:
-    """dbt build for one load. Warn-level test failures are logged with their rows."""
+def build(paths: Paths, load_id: str, full_refresh: bool = False) -> None:
+    """dbt build up to one load. Incremental gold models merge only that load, or replay every
+    load up to it with `full_refresh`. Warn-level test failures are logged with their rows."""
     os.environ["WAREHOUSE_PATH"] = str(paths.warehouse)  # read by dbt/profiles.yml
     args = [
         "build",
@@ -110,6 +112,8 @@ def build(paths: Paths, load_id: str) -> None:
         "--log-path", str(paths.dbt_log_dir),
         "--vars", json.dumps({"load_id": load_id, "population_indicator": POPULATION}),
     ]  # fmt: skip
+    if full_refresh:
+        args.append("--full-refresh")
     result = dbtRunner().invoke(args)
     if result.exception is not None:
         raise PipelineError(f"dbt build could not run: {result.exception}") from result.exception

@@ -11,22 +11,22 @@ flags:
   send_anonymous_usage_stats: false
 
 vars:
-  # The load to build from; null means the latest completed load. Set by `python -m wb_pipeline`.
+  # The load to build up to; null means the latest completed load. Set by `python -m wb_pipeline`.
   load_id: null
   # The weight for population_weighted_mean aggregations.
   population_indicator: SP.POP.TOTL
 
 models:
   wb_pipeline:
-    staging:
-      +schema: staging
+    # Medallion layers: raw (written by dlt) -> stage -> gold.
+    stage:
+      +schema: stage
       +materialized: view
-    marts:
-      +schema: marts
+    gold:
+      +schema: gold
       +materialized: table
-    reporting:
-      +schema: reporting
-      +materialized: view
+      reports:
+        +materialized: view
 
 data_tests:
   wb_pipeline:

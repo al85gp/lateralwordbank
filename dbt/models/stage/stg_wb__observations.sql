@@ -1,4 +1,4 @@
--- One row per observation record in the selected load's indicator responses, typed and flattened.
+-- One row per observation record per load, from each load's indicator responses, typed and flattened.
 with pages as (
     select
         responses._dlt_load_id as load_id,
@@ -8,8 +8,8 @@ with pages as (
         json_extract_string(responses.body, '$[0].sourceid') as source_id,
         responses.body
     from {{ source('raw', 'api_responses') }} as responses
-    inner join {{ ref('stg_wb__selected_load') }} as selected
-        on responses._dlt_load_id = selected.load_id
+    inner join {{ ref('stg_wb__loads') }} as loads
+        on responses._dlt_load_id = loads.load_id
     where responses.endpoint = 'indicator'
 ),
 

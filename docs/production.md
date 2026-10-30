@@ -21,7 +21,7 @@ Locally, nothing changes: the pipeline stays one `docker compose run`. Dagster o
 | --- | --- |
 | `world_bank_source` (dlt) | Assets `raw/run_scope` and `raw/api_responses`, via `dagster-dlt` (`@dlt_assets`) |
 | The dbt project | One asset per model, via `dagster-dbt` (`@dbt_assets`); every dbt test becomes an asset check on its model |
-| `export.py` | An asset, `reports_csv`, downstream of the four reporting views |
+| `export.py` | An asset, `reports_csv`, downstream of the four gold report views |
 | `reconcile.py` | An asset check on `reports_csv` |
 | `python -m wb_pipeline run` | A job over all assets, started by a schedule or a sensor |
 | `rebuild --load-id <id>` | The same job with `load_id` in its run config: rebuilds from raw, no API call |
@@ -91,4 +91,4 @@ Alerting. These are sensors run by the Dagster daemon, all open source:
 | dbt-duckdb | dbt-snowflake, same models; JSON paths move to `:` syntax and `FLATTEN`; tests surface as Dagster asset checks | Same |
 | CSV swap after a green build | Build into a staging schema, then `ALTER SCHEMA ... SWAP WITH` as the final asset, behind the blocking checks | Same |
 | Test failures and alerts | Dagster asset checks, freshness checks and sensors to Slack, email or SNS | Dagster asset checks and sensors to Teams or email |
-| Streamlit dashboard container | Streamlit in Snowflake over the reporting views, or the same image as an ECS service | The same image on Azure Container Apps |
+| Streamlit dashboard container | Streamlit in Snowflake over the gold report views, or the same image as an ECS service | The same image on Azure Container Apps |
