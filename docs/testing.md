@@ -7,15 +7,15 @@ The dbt tests that run on every build, the offline pytest suite, CI, and a check
 
 ### dbt tests (every run)
 
-`dbt build` runs 77 tests alongside the 11 models. A failing `error` test stops the run before export, so `output/` keeps the last good CSVs. A `warn` test's failing rows are printed in the run log, and the run continues. Every test stores its failing rows in the `dq` schema, so a failure can be inspected afterwards.
+`dbt build` runs 82 tests alongside the 12 models. A failing `error` test stops the run before export, so `output/` keeps the last good CSVs. A `warn` test's failing rows are printed in the run log, and the run continues. Every test stores its failing rows in the `dq` schema, so a failure can be inspected afterwards.
 
 | Check | Implemented as | Severity |
 | --- | --- | --- |
-| Keys unique and not null on every model, including the reporting views | `unique` (on the full grain), `not_null` | error |
+| Keys unique and not null on every model, including the gold report views; per load in stage | `unique` (on the full grain), `not_null` | error |
 | Exactly one load selected | `unique`, `not_null` on `stg_wb__selected_load` | error |
 | Fact rows point at existing dims | `relationships` | error |
 | `value_status`, `aggregation`, `change_status`, `source_id` hold only known values | `accepted_values` | error |
-| Spine complete: fact rows = countries × indicators × years in the load's scope, counted from `raw.run_scope` | `assert_spine_complete` | error |
+| Spine complete: fact rows = distinct keys requested by the loads up to the selected one, counted from `raw.run_scope`, and every key of the selected load merged from it | `assert_spine_complete` | error |
 | No duplicate API records per key within a load | `assert_no_duplicate_api_records` | error |
 | Every value from the API has full lineage; `value` is null unless `reported` | `assert_reported_values_have_lineage` | error |
 | Lineage resolves: the raw record at `record_index` has the same country, indicator, year and value | `assert_lineage_resolves_to_raw` | error |
@@ -34,7 +34,7 @@ The consistency checks warn rather than fail: the source revises indicators on d
 
 `requests-mock` intercepts every HTTP call dlt makes and serves JSON from `tests/fixtures/`, recorded once from the live API. The fixtures are the exact canonical URLs a real run sends: the country call plus pages 1 and 2 at `per_page=50` for all four indicators, copied from `api_calls/samples/pagination/`. Joined, the two pages of each indicator match the single-page golden recordings in `api_calls/samples/observations/` value for value. Integration tests run the dlt pipeline into a temporary DuckDB file and call `dbt build` through dbt's Python runner, with dlt's retry delays set to zero. The `test` service runs with `network_mode: none`, so any accidental live call fails the suite.
 
-66 tests in five files. Names below are prefixes; each covers several cases.
+71 tests in six files. Names below are prefixes; each covers several cases.
 
 | Test | File | Proves |
 | --- | --- | --- |
@@ -47,6 +47,10 @@ The consistency checks warn rather than fail: the source revises indicators on d
 | `test_end_to_end` | `test_pipeline.py` | Extract, `dbt build`, export: 252 reported facts, four CSVs with the expected headers and row counts, no leftover staging folder |
 | `test_lineage_*` | `test_pipeline.py` | For all 252 facts, the raw body's SHA-256 matches and the record at `record_index` has the same country, indicator, year and value |
 | `test_idempotent_rerun` | `test_pipeline.py` | Two runs: raw has two loads, the fact table is identical with 252 rows, and the CSVs are byte-identical |
+| `test_null_and_missing_values_flow_correctly_to_every_report` | `test_data_validation.py` | The recorded responses are served with USA GDP 2020 and Brazil population 2019 as JSON null and South Africa life expectancy 2024 left out. A Python oracle computes every fact and every report row from the served JSON, and raw (bytes and SHA-256), stage, the gold fact with its lineage, all four CSVs and `reconcile` must match it row by row. A planted bug in the weighted mean, which no dbt test catches, fails it |
+| `test_late_values_are_merged_in_on_the_next_run` | `test_data_validation.py` | The same gaps, then a run with the complete data: the merge turns all three into `reported`, every layer matches the oracle again, and the missing-data report is empty |
+| `test_merge_*` | `test_pipeline.py` | A run with three indicators then one with four grows the fact from 189 to 252 rows, all merged from the second load. A narrower second run keeps the fourth indicator's 63 rows from the first load, applies a corrected value, and passes `reconcile` |
+| `test_full_refresh_replays_the_merges` | `test_pipeline.py` | Three runs that narrow, widen and correct, then `rebuild`: the full refresh gives the same fact table, load ids included, and byte-identical CSVs |
 | `test_correction_*` | `test_pipeline.py` | A corrected value in run two shows in the fact, and raw keeps both bodies. `rebuild --load-id` of run one restores its facts and CSVs exactly, with no API calls |
 | `test_failed_run_not_exported` | `test_pipeline.py` | A run that fails on its last page adds no completed load and leaves `output/` byte-identical |
 | `test_bad_data_blocks_export` | `test_pipeline.py` | A duplicate page seeded into raw fails `assert_no_duplicate_api_records`; `output/` stays byte-identical |
@@ -84,7 +88,7 @@ Run these from the repository folder. Items 6 to 8 change `config/pipeline.yml` 
    docker compose run --rm --build pipeline
    ```
 
-   Expect `PASS=88` from dbt and the log line `done: load <id>`. If the source hasn't changed since 2026-10-08, `git status` shows no change in `output/`.
+   Expect `PASS=94` from dbt and the log line `done: load <id>`. If the source hasn't changed since 2026-10-08, `git status` shows no change in `output/`.
 2. **In Docker Desktop.** Run:
 
    ```bash
@@ -137,4 +141,4 @@ Run these from the repository folder. Items 6 to 8 change `config/pipeline.yml` 
     docker compose run --rm test
     ```
 
-    Expect `66 passed`.
+    Expect `71 passed`.

@@ -1,4 +1,4 @@
-"""Write the reporting views to CSV.
+"""Write the gold report views to CSV.
 
 The files are written to output/.staging first and moved into output/ only when all of them
 are written, so a failure part-way never leaves a mix of old and new reports.
@@ -28,7 +28,7 @@ def export_reports(con: duckdb.DuckDBPyConnection, output_dir: Path) -> list[Pat
     staging.mkdir()
     for name, order_by in REPORTS.items():
         target = str(staging / f"{name}.csv").replace("'", "''")
-        con.execute(f"copy (select * from reporting.{name} order by {order_by}) to '{target}' (header, delimiter ',')")
+        con.execute(f"copy (select * from gold.{name} order by {order_by}) to '{target}' (header, delimiter ',')")
     written = []
     for name in REPORTS:
         final = output_dir / f"{name}.csv"

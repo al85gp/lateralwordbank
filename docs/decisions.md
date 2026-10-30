@@ -24,7 +24,8 @@ Every design decision with the alternative considered and why, and what each cho
 | 90 s HTTP timeout | 30 s | An uncached response from the API took 45 s |
 | Dashboard in its own Docker stage | Install Streamlit into the pipeline image | The pipeline image stays 713 MB and unchanged; the dashboard needs none of dlt or dbt |
 | Raw `body` as text | dlt's `json` column type | `json` re-serializes the body, so its bytes would no longer match `body_sha256`; text keeps them exact, and DuckDB's JSON functions still read it |
-| One `stg_wb__selected_load` model that every staging model joins to | Repeat the "latest completed load" filter in each model | One place decides which load is built; `rebuild --load-id` only changes a dbt var |
+| One `stg_wb__selected_load` model, and `stg_wb__loads` (every load up to it) that every stage model joins to | Repeat the "latest completed load" filter in each model | One place decides which loads are built; `rebuild --load-id` only changes a dbt var |
+| Medallion schemas `raw` → `stage` → `gold`, with `fct_indicator_year` an incremental `merge` model | Rebuild the fact as a table from one load each run | A run touches only the keys its load requested, so a wider config adds rows and a narrower one drops none; `rebuild` (`--full-refresh`) replays every load and gives the same table |
 | A cache-busted retry counter per canonical URL for the whole run | A counter per page fetch | A restart from page 1 also gets fresh tokens, and the attempt budget still bounds the total requests |
 | Run the container as `${UID}:${GID}` (default 1000:1000) | Run as root | Files in `data/` and `output/` belong to that user, not root. Shells don't export `UID` and `GID`, so on Linux with another user id run `export UID GID=$(id -g)` first |
 | Pinned top-level versions plus `constraints.txt` | Top-level pins only | The same transitive versions in every build |
@@ -34,7 +35,7 @@ Every design decision with the alternative considered and why, and what each cho
 
 | Decision | Gained | Given up |
 | --- | --- | --- |
-| Open-source dlt for ingestion | Retries with backoff, atomic load packages, a load log in `_dlt_loads`, typed raw tables, a load id to put in cache-buster tokens | One more abstraction to explain; paging and response validation are our own code rather than a dlt paginator; a failed load step can leave rows that staging must filter out |
+| Open-source dlt for ingestion | Retries with backoff, atomic load packages, a load log in `_dlt_loads`, typed raw tables, a load id to put in cache-buster tokens | One more abstraction to explain; paging and response validation are our own code rather than a dlt paginator; a failed load step can leave rows that stage must filter out |
 | Validation with cache-buster retries | Wrong cached bodies are caught and usually recovered | Not guaranteed, because an inner cache sometimes ignores the token, so a run can still fail after `validation_attempts`; raw needs both `request_url` and `fetched_url` |
 | `per_page: 50` | Paging is exercised on every run | Nine requests instead of five |
 | dbt-core, no packages | `ref()` ordering, built-in tests, generated docs | `dbt build` is not transactional; a failing test leaves rebuilt tables, so CSVs are swapped in only on green |
@@ -45,6 +46,7 @@ Every design decision with the alternative considered and why, and what each cho
 | Raw stores full bodies | Exact traceability and replay | Raw grows each run; production needs a retention rule |
 | Full re-pull every run | Simple and always consistent | Redundant requests, harmless at this volume |
 | Consistency checks warn | Reports ship despite revision timing | A real error needs someone to read the warning |
-| Failing test rows stored in `dq` | A failure can be inspected after the run; warnings print their rows | 77 small tables in the `dq` schema, rebuilt every run |
+| `MERGE` into the fact instead of a rebuild | New keys are added and old ones kept; a run writes only its own load | A key removed from config keeps its last value; a `run` after `rebuild --load-id <old>` merges onto that older state; stage parses every load, so raw retention matters sooner |
+| Failing test rows stored in `dq` | A failure can be inspected after the run; warnings print their rows | 82 small tables in the `dq` schema, rebuilt every run |
 | dbt runs in-process through `dbtRunner` | One process and one exit code for the whole run; tests call it directly | dlt and dbt share a Python environment, so their dependency versions must agree (pinned in `constraints.txt`) |
 | Dagster in production only | Locally, one command and nothing else to run; in production, a UI, alerts, freshness checks and backfills | Two ways to start the same steps; Dagster's webserver, daemon and PostgreSQL are infrastructure to operate; the Dagster definitions still have to be written |
